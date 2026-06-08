@@ -380,6 +380,12 @@ const api = {
   put: (url, fd) => fetch(url, { method: 'PUT', body: fd }).then(r => r.json()),
   patch: (url, body) => fetch(url, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) }).then(r => r.json()),
   del: url => fetch(url, { method: 'DELETE' }).then(r => r.json()),
+  delete: async(url) => {
+  const r = await fetch(url, {
+    method: 'DELETE'
+  });
+  return r.json();
+},
 };
 
 // ─── INIT ──────────────────────────────────────────────────────────────────
