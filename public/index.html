@@ -247,6 +247,7 @@
       <div class="sidebar-item" id="sb-products" onclick="showAdminSection('products',this)">🪢 My Products</div>
       <div class="sidebar-item" id="sb-add-product" onclick="showAdminSection('add-product',this)">➕ Add Product</div>
       <div class="sidebar-item" id="sb-orders" onclick="showAdminSection('orders',this)">📦 Orders <span class="new-orders-dot" id="newOrdersDot" style="display:none">0</span></div>
+      <div class="sidebar-item" onclick="adminLogout()">🚪 Logout</div>
     </div>
     <div class="admin-content">
       <!-- DASHBOARD -->
@@ -369,11 +370,40 @@ async function refreshAll() {
 
 // ─── PAGE NAV ──────────────────────────────────────────────────────────────
 function showPage(name, el) {
+
+  if (name === 'admin') {
+
+    const loggedIn = localStorage.getItem('adminLoggedIn');
+
+    if (loggedIn !== 'true') {
+
+      const username = prompt('Admin Username');
+      const password = prompt('Admin Password');
+
+      if (
+        username === 'admin' &&
+        password === '956002'
+      ) {
+        localStorage.setItem('adminLoggedIn', 'true');
+      } else {
+        showToast('❌ Invalid Admin Credentials');
+        return;
+      }
+    }
+  }
+
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
   document.getElementById('page-' + name).classList.add('active');
+
   if (el) el.classList.add('active');
-  if (name === 'admin') { loadStats(); loadRecentOrders(); loadAdminProducts(); }
+
+  if (name === 'admin') {
+    loadStats();
+    loadRecentOrders();
+    loadAdminProducts();
+  }
 }
 
 // ─── SHOP ──────────────────────────────────────────────────────────────────
@@ -788,6 +818,12 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent=msg; t.style.display='block';
   clearTimeout(t._t); t._t=setTimeout(()=>t.style.display='none',2800);
+}
+
+function adminLogout() {
+  localStorage.removeItem('adminLoggedIn');
+  showToast('👋 Logged Out');
+  location.reload();
 }
 
 init();
