@@ -151,12 +151,6 @@ app.post('/api/orders', (req, res) => {
     total += p.price * item.qty;
   }
 
-  // Deduct stock
-  for (const item of items) {
-    const p = products.find(x => x.id === item.id);
-    p.stock -= item.qty;
-  }
-  writeJSON(PRODUCTS_FILE, products);
 
   const orderId = 'RR' + Date.now().toString().slice(-6);
   const order = {
@@ -214,7 +208,9 @@ app.get('/api/stats', (req, res) => {
   res.json({
     totalProducts: products.length,
     totalOrders: orders.length,
-    totalRevenue: orders.reduce((s, o) => s + o.total, 0),
+    totalRevenue: orders
+  .filter(o => o.status === 'Delivered')
+  .reduce((s, o) => s + o.total, 0),
     lowStock: products.filter(p => p.stock > 0 && p.stock <= 5).length,
     outStock: products.filter(p => p.stock === 0).length,
     pendingOrders: orders.filter(o => ['New', 'Processing'].includes(o.status)).length,
