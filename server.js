@@ -172,11 +172,38 @@ app.post('/api/orders', (req, res) => {
 
 app.patch('/api/orders/:id/status', (req, res) => {
   const orders = readJSON(ORDERS_FILE, []);
+  const products = readJSON(PRODUCTS_FILE, []);
+
   const o = orders.find(x => x.id === req.params.id);
-  if (!o) return res.status(404).json({ error: 'Not found' });
-  o.status = req.body.status;
+
+  if (!o) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  const oldStatus = o.status;
+  const newStatus = req.body.status;
+
+  // Reduce stock only first time order becomes Delivered
+  if (
+    oldStatus !== 'Delivered' &&
+    newStatus === 'Delivered'
+  ) {
+    for (const item of o.items) {
+      const p = products.find(x => x.id === item.id);
+
+      if (p) {
+        p.stock = Math.max(0, p.stock - item.qty);
+      }
+    }
+
+    writeJSON(PRODUCTS_FILE, products);
+  }
+
+  o.status = newStatus;
   o.updatedAt = new Date().toISOString();
+
   writeJSON(ORDERS_FILE, orders);
+
   res.json(o);
 });
 
