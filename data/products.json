@@ -1,0 +1,74 @@
+[
+  {
+    "id": "c542dafa-d92c-419b-8106-41958bae1c58",
+    "name": "Golden Zari Rakhi",
+    "price": 199,
+    "oldPrice": 299,
+    "category": "Designer",
+    "stock": 30,
+    "desc": "Elegant rakhi with golden zari thread and intricate beadwork. Perfect for gifting.",
+    "images": [],
+    "emoji": "🌟",
+    "createdAt": "2026-06-08T11:09:47.924Z"
+  },
+  {
+    "id": "74f87830-1c64-45d7-8638-22646018a9ec",
+    "name": "Peacock Feather Rakhi",
+    "price": 249,
+    "oldPrice": 349,
+    "category": "Designer",
+    "stock": 14,
+    "desc": "Beautifully crafted peacock feather design with turquoise and gold beads.",
+    "images": [],
+    "emoji": "🦚",
+    "createdAt": "2026-06-08T11:09:47.924Z"
+  },
+  {
+    "id": "678a36c4-91e3-462e-85b6-2e39d2d0bcdf",
+    "name": "Kids Cartoon Rakhi – Dino",
+    "price": 99,
+    "oldPrice": 149,
+    "category": "Kids",
+    "stock": 50,
+    "desc": "Fun dinosaur-themed rakhi kids will love. Safe elastic band.",
+    "images": [],
+    "emoji": "🦕",
+    "createdAt": "2026-06-08T11:09:47.924Z"
+  },
+  {
+    "id": "e6caf719-1ece-42fd-a49d-b40c7149df1e",
+    "name": "Silver Om Bracelet Rakhi",
+    "price": 499,
+    "oldPrice": 699,
+    "category": "Silver / Metal",
+    "stock": 8,
+    "desc": "Premium silver-plated Om charm rakhi, ideal for special occasions.",
+    "images": [],
+    "emoji": "🕉️",
+    "createdAt": "2026-06-08T11:09:47.924Z"
+  },
+  {
+    "id": "aaad029f-c88b-4873-b295-30db7fa59965",
+    "name": "Red Silk Thread Rakhi",
+    "price": 79,
+    "oldPrice": null,
+    "category": "Thread",
+    "stock": 0,
+    "desc": "Traditional red silk thread with golden charm – simple and auspicious.",
+    "images": [],
+    "emoji": "🔴",
+    "createdAt": "2026-06-08T11:09:47.924Z"
+  },
+  {
+    "id": "65a83530-6ac3-406e-bc59-9c0df46440b8",
+    "name": "Pearl & Rose Combo Set",
+    "price": 599,
+    "oldPrice": 799,
+    "category": "Combo Set",
+    "stock": 20,
+    "desc": "Set of 3 rakhis with pearl clusters and rose motif. Comes in premium box.",
+    "images": [],
+    "emoji": "🌸",
+    "createdAt": "2026-06-08T11:09:47.924Z"
+  }
+]
