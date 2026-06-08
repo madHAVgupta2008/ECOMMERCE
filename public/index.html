@@ -152,6 +152,15 @@
   .stock-input{width:60px;padding:6px 10px;border:2px solid #d4b483;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.9rem;text-align:center}
   .action-btns{display:flex;gap:6px}
   .btn-edit{background:var(--gold);color:var(--bark);border:none;padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:.82rem;font-family:'Nunito',sans-serif}
+  .btn-danger{
+  background:#dc3545;
+  color:#fff;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:700;
+}
   .btn-delete{background:#fde8e8;color:var(--deep-red);border:none;padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:.82rem;font-family:'Nunito',sans-serif}
 
   .orders-table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px var(--shadow)}
@@ -771,7 +780,7 @@ async function loadOrders() {
 
 function buildOrderTableHTML(orders) {
   return `<table class="orders-table">
-    <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Date</th><th>Payment</th><th>Status</th></tr></thead>
+    <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Date</th><th>Payment</th><th>Status</th><th>Action</th></tr></thead>
     <tbody>${orders.map(o=>`
       <tr>
         <td><strong>#${o.id}</strong></td>
@@ -790,6 +799,13 @@ function buildOrderTableHTML(orders) {
             ${['New','Processing','Dispatched','Delivered','Cancelled'].map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
           </select>
         </td>
+        <td>
+  <button
+    class="btn-danger"
+    onclick="deleteOrder('${o.id}')">
+    🗑️ Delete
+  </button>
+</td>
       </tr>`).join('')}
     </tbody></table>`;
 }
@@ -908,6 +924,26 @@ async function updateOrderStatus(id, status) {
     showToast(`📦 Order #${id} → ${status}`);
     loadStats();
   } catch(e) { showToast('❌ Failed to update status'); }
+}
+
+async function deleteOrder(id) {
+
+  if (!confirm(`Delete Order #${id}?`)) return;
+
+  try {
+
+    await api.delete(`/api/orders/${id}`);
+
+    showToast('🗑️ Order Deleted');
+
+    loadOrders();
+    loadStats();
+
+  } catch(e) {
+
+    showToast('❌ Failed to delete order');
+
+  }
 }
 
 // ─── POLL FOR NEW ORDERS ───────────────────────────────────────────────────

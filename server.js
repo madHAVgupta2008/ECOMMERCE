@@ -201,6 +201,16 @@ app.patch('/api/orders/:id/status', (req, res) => {
   res.json(o);
 });
 
+app.delete('/api/orders/:id', (req, res) => {
+  let orders = readJSON(ORDERS_FILE, []);
+
+  orders = orders.filter(o => o.id !== req.params.id);
+
+  writeJSON(ORDERS_FILE, orders);
+
+  res.json({ ok: true });
+});
+
 // ── Stats API ──────────────────────────────────────────────────────────────
 app.get('/api/stats', (req, res) => {
   const products = readJSON(PRODUCTS_FILE, []);
