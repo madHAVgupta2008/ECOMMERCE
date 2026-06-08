@@ -533,49 +533,125 @@ function openCheckout() {
 }
 
 async function placeOrder() {
+
   const name = document.getElementById('cName').value.trim();
   const phone = document.getElementById('cPhone').value.trim();
   const address = document.getElementById('cAddress').value.trim();
   const payment = document.getElementById('cPayment').value;
-  if (!name||!phone||!address||!payment) { showToast('⚠️ Please fill all required fields'); return; }
+
+  if (!name || !phone || !address || !payment) {
+    showToast('⚠️ Please fill all required fields');
+    return;
+  }
 
   const btn = document.getElementById('placeOrderBtn');
-  btn.disabled = true; btn.textContent = '⏳ Placing order…';
+  btn.disabled = true;
+  btn.textContent = '⏳ Placing order…';
 
   const items = cart.map(i => {
-    const p = allProducts.find(x=>x.id===i.id);
-    return { id:i.id, name:p.name, price:p.price, qty:i.qty };
+    const p = allProducts.find(x => x.id === i.id);
+    return {
+      id: i.id,
+      name: p.name,
+      price: p.price,
+      qty: i.qty
+    };
   });
 
   try {
-    const order = await api.post('/api/orders', {
-      name, phone, email: document.getElementById('cEmail').value,
-      address, payment, notes: document.getElementById('cNotes').value, items
-    });
-    if (order.error) { showToast('❌ ' + order.error); btn.disabled=false; btn.textContent='✅ Confirm Order'; return; }
 
-    // Deduct stock locally
-    cart.forEach(i => { const p=allProducts.find(x=>x.id===i.id); if(p) p.stock=Math.max(0,p.stock-i.qty); });
+    const order = await api.post('/api/orders', {
+      name,
+      phone,
+      email: document.getElementById('cEmail').value,
+      address,
+      payment,
+      notes: document.getElementById('cNotes').value,
+      items
+    });
+
+    if (order.error) {
+      showToast('❌ ' + order.error);
+      btn.disabled = false;
+      btn.textContent = '✅ Confirm Order';
+      return;
+    }
+
+    // WhatsApp Message
+    const orderItems = items.map(i =>
+      `${i.name} x ${i.qty}`
+    ).join('\n');
+
+    const whatsappMessage =
+`🛍️ New Rakhi Order
+
+Order ID: ${order.id}
+
+Name: ${name}
+Phone: ${phone}
+
+Address:
+${address}
+
+Payment:
+${payment}
+
+Items:
+${orderItems}
+
+Total: ₹${order.total}`;
+
+    window.open(
+      `https://wa.me/919560026018?text=${encodeURIComponent(whatsappMessage)}`,
+      '_blank'
+    );
+
+    // Clear cart
     cart = [];
     updateCartCount();
     renderCartPanel();
-    filterProducts();
 
     document.getElementById('checkoutModalContent').innerHTML = `
       <div class="success-screen">
         <div class="success-icon">🎉</div>
+
         <h3>Order Placed!</h3>
-        <p>Thank you, <strong>${name}</strong>! We'll contact you soon.</p>
+
+        <p>
+          Thank you,
+          <strong>${name}</strong>!
+          We'll contact you soon.
+        </p>
+
         <div class="order-id-box">
-          <div style="font-size:.8rem;color:#7a5c3a;margin-bottom:6px;">Your Order ID</div>
+          <div style="font-size:.8rem;color:#7a5c3a;margin-bottom:6px;">
+            Your Order ID
+          </div>
           <strong>#${order.id}</strong>
         </div>
-        <p style="font-size:.85rem;color:#7a5c3a">💬 Confirmation call on <strong>${phone}</strong></p>
-        <button class="btn-primary" onclick="closeModal()" style="margin-top:24px;width:100%">🛍️ Continue Shopping</button>
-      </div>`;
-  } catch(e) { showToast('❌ Order failed. Try again.'); btn.disabled=false; btn.textContent='✅ Confirm Order'; }
-}
 
+        <p style="font-size:.85rem;color:#7a5c3a">
+          💬 Confirmation call on
+          <strong>${phone}</strong>
+        </p>
+
+        <button
+          class="btn-primary"
+          onclick="closeModal()"
+          style="margin-top:24px;width:100%">
+          🛍️ Continue Shopping
+        </button>
+      </div>`;
+
+  } catch (e) {
+
+    showToast('❌ Order failed. Try again.');
+
+    btn.disabled = false;
+    btn.textContent = '✅ Confirm Order';
+
+  }
+}
 function closeModal() { document.getElementById('checkoutModal').classList.remove('open'); }
 
 // ─── ADMIN ─────────────────────────────────────────────────────────────────
