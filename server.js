@@ -4,9 +4,18 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const mongoose = require('mongoose');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+mongoose.connect(process.env.MONGO_URI)
+.then(() => {
+  console.log('✅ MongoDB Connected');
+})
+.catch((err) => {
+  console.error('❌ MongoDB Error:', err);
+});
 
 // ── Paths ──────────────────────────────────────────────────────────────────
 const DATA_DIR = path.join(__dirname, 'data');
@@ -194,7 +203,14 @@ app.post('/api/orders', (req, res) => {
     id: orderId, name, phone, email: email || '', address, payment,
     notes: notes || '', items: processedItems, total, status: 'New',
     createdAt: new Date().toISOString(),
-    date: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    date: new Date().toLocaleString('en-IN', {
+  timeZone: 'Asia/Kolkata',
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+})
   };
   orders.unshift(order);
   writeJSON(ORDERS_FILE, orders);
@@ -310,6 +326,13 @@ app.post('/api/orders/track', (req, res) => {
   }
 
   res.json(matchedOrders);
+});
+
+app.get('/mongo-test', async (req, res) => {
+  res.json({
+    connected: mongoose.connection.readyState === 1,
+    state: mongoose.connection.readyState
+  });
 });
 
 // ── Stats API ──────────────────────────────────────────────────────────────
