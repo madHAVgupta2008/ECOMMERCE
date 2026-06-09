@@ -80,34 +80,72 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 8 * 1024 * 1024 } });
 
 // ── PRODUCTS API ───────────────────────────────────────────────────────────
-app.get('/api/products', (req, res) => {
-  const products = readJSON(PRODUCTS_FILE, []);
-  res.json(products);
+app.get('/api/products', async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/products', upload.array('images', 10), (req, res) => {
-  const products = readJSON(PRODUCTS_FILE, []);
-  const { name, price, oldPrice, category, stock, desc, emoji, itemCode } = req.body;
-  if (!name || !price || !category || !desc || !itemCode) return res.status(400).json({ error: 'Missing required fields' });
+app.post('/api/products', upload.array('images', 10), async (req, res) => {
+  try {
+    const {
+      name,
+      price,
+      oldPrice,
+      category,
+      stock,
+      desc,
+      emoji,
+      itemCode
+    } = req.body;
 
-  const cleanedItemCode = itemCode.trim().toUpperCase();
-  if (products.some(p => p.itemCode && p.itemCode.toUpperCase() === cleanedItemCode)) {
-    return res.status(400).json({ error: 'Item Code must be unique' });
+    if (!name || !price || !category || !desc || !itemCode) {
+      return res.status(400).json({
+        error: 'Missing required fields'
+      });
+    }
+
+    const cleanedItemCode = itemCode.trim().toUpperCase();
+
+    const existingProduct = await Product.findOne({
+      itemCode: cleanedItemCode
+    });
+
+    if (existingProduct) {
+      return res.status(400).json({
+        error: 'Item Code must be unique'
+      });
+    }
+
+    const imageUrls = (req.files || []).map(
+      file => `/uploads/${file.filename}`
+    );
+
+    const product = await Product.create({
+      id: uuidv4(),
+      name,
+      price: Number(price),
+      oldPrice: oldPrice ? Number(oldPrice) : null,
+      category,
+      stock: Number(stock) || 0,
+      desc,
+      emoji: emoji || '🧵',
+      itemCode: cleanedItemCode,
+      images: imageUrls,
+      createdAt: new Date().toISOString()
+    });
+
+    res.json(product);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: err.message
+    });
   }
-
-  const imageUrls = (req.files || []).map(f => `/uploads/${f.filename}`);
-  const product = {
-    id: uuidv4(), name, price: Number(price),
-    oldPrice: oldPrice ? Number(oldPrice) : null,
-    category, stock: Number(stock) || 0, desc,
-    emoji: emoji || '🪢',
-    itemCode: itemCode.trim(),
-    images: imageUrls,
-    createdAt: new Date().toISOString()
-  };
-  products.unshift(product);
-  writeJSON(PRODUCTS_FILE, products);
-  res.json(product);
 });
 
 app.get('/migrate-products', async (req, res) => {
