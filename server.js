@@ -28,14 +28,28 @@ function writeJSON(file, data) {
 // Seed demo products if none exist
 if (!fs.existsSync(PRODUCTS_FILE)) {
   const demo = [
-    { id: uuidv4(), name: 'Golden Zari Rakhi', price: 199, oldPrice: 299, category: 'Designer', stock: 30, desc: 'Elegant rakhi with golden zari thread and intricate beadwork. Perfect for gifting.', images: [], emoji: '🌟', createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Peacock Feather Rakhi', price: 249, oldPrice: 349, category: 'Designer', stock: 15, desc: 'Beautifully crafted peacock feather design with turquoise and gold beads.', images: [], emoji: '🦚', createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Kids Cartoon Rakhi – Dino', price: 99, oldPrice: 149, category: 'Kids', stock: 50, desc: 'Fun dinosaur-themed rakhi kids will love. Safe elastic band.', images: [], emoji: '🦕', createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Silver Om Bracelet Rakhi', price: 499, oldPrice: 699, category: 'Silver / Metal', stock: 8, desc: 'Premium silver-plated Om charm rakhi, ideal for special occasions.', images: [], emoji: '🕉️', createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Red Silk Thread Rakhi', price: 79, oldPrice: null, category: 'Thread', stock: 0, desc: 'Traditional red silk thread with golden charm – simple and auspicious.', images: [], emoji: '🔴', createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Pearl & Rose Combo Set', price: 599, oldPrice: 799, category: 'Combo Set', stock: 20, desc: 'Set of 3 rakhis with pearl clusters and rose motif. Comes in premium box.', images: [], emoji: '🌸', createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Golden Zari Rakhi', itemCode: 'GZR-01', price: 199, oldPrice: 299, category: 'Designer', stock: 30, desc: 'Elegant rakhi with golden zari thread and intricate beadwork. Perfect for gifting.', images: [], emoji: '🌟', createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Peacock Feather Rakhi', itemCode: 'PFR-02', price: 249, oldPrice: 349, category: 'Designer', stock: 15, desc: 'Beautifully crafted peacock feather design with turquoise and gold beads.', images: [], emoji: '🦚', createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Kids Cartoon Rakhi – Dino', itemCode: 'KRD-03', price: 99, oldPrice: 149, category: 'Kids', stock: 50, desc: 'Fun dinosaur-themed rakhi kids will love. Safe elastic band.', images: [], emoji: '🦕', createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Silver Om Bracelet Rakhi', itemCode: 'SOB-04', price: 499, oldPrice: 699, category: 'Silver / Metal', stock: 8, desc: 'Premium silver-plated Om charm rakhi, ideal for special occasions.', images: [], emoji: '🕉️', createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Red Silk Thread Rakhi', itemCode: 'RST-05', price: 79, oldPrice: null, category: 'Thread', stock: 0, desc: 'Traditional red silk thread with golden charm – simple and auspicious.', images: [], emoji: '🔴', createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Pearl & Rose Combo Set', itemCode: 'PRC-06', price: 599, oldPrice: 799, category: 'Combo Set', stock: 20, desc: 'Set of 3 rakhis with pearl clusters and rose motif. Comes in premium box.', images: [], emoji: '🌸', createdAt: new Date().toISOString() },
   ];
   writeJSON(PRODUCTS_FILE, demo);
+} else {
+  // Migrate existing products to have itemCode if missing
+  const products = readJSON(PRODUCTS_FILE, []);
+  let updated = false;
+  products.forEach((p, idx) => {
+    if (!p.itemCode) {
+      const initials = p.name.split(' ').map(w => w[0]).join('').replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 3) || 'RKH';
+      p.itemCode = `${initials}-${String(idx + 1).padStart(2, '0')}`;
+      updated = true;
+    }
+  });
+  if (updated) {
+    writeJSON(PRODUCTS_FILE, products);
+  }
 }
 if (!fs.existsSync(ORDERS_FILE)) writeJSON(ORDERS_FILE, []);
 
@@ -62,8 +76,13 @@ app.get('/api/products', (req, res) => {
 
 app.post('/api/products', upload.array('images', 10), (req, res) => {
   const products = readJSON(PRODUCTS_FILE, []);
-  const { name, price, oldPrice, category, stock, desc, emoji } = req.body;
-  if (!name || !price || !category || !desc) return res.status(400).json({ error: 'Missing required fields' });
+  const { name, price, oldPrice, category, stock, desc, emoji, itemCode } = req.body;
+  if (!name || !price || !category || !desc || !itemCode) return res.status(400).json({ error: 'Missing required fields' });
+
+  const cleanedItemCode = itemCode.trim().toUpperCase();
+  if (products.some(p => p.itemCode && p.itemCode.toUpperCase() === cleanedItemCode)) {
+    return res.status(400).json({ error: 'Item Code must be unique' });
+  }
 
   const imageUrls = (req.files || []).map(f => `/uploads/${f.filename}`);
   const product = {
@@ -71,6 +90,7 @@ app.post('/api/products', upload.array('images', 10), (req, res) => {
     oldPrice: oldPrice ? Number(oldPrice) : null,
     category, stock: Number(stock) || 0, desc,
     emoji: emoji || '🪢',
+    itemCode: itemCode.trim(),
     images: imageUrls,
     createdAt: new Date().toISOString()
   };
@@ -84,7 +104,15 @@ app.put('/api/products/:id', upload.array('images', 10), (req, res) => {
   const idx = products.findIndex(p => p.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Not found' });
 
-  const { name, price, oldPrice, category, stock, desc, emoji, keepImages } = req.body;
+  const { name, price, oldPrice, category, stock, desc, emoji, keepImages, itemCode } = req.body;
+
+  if (itemCode) {
+    const cleanedItemCode = itemCode.trim().toUpperCase();
+    if (products.some((p, i) => i !== idx && p.itemCode && p.itemCode.toUpperCase() === cleanedItemCode)) {
+      return res.status(400).json({ error: 'Item Code must be unique' });
+    }
+  }
+
   const newImages = (req.files || []).map(f => `/uploads/${f.filename}`);
   const existingImages = keepImages ? JSON.parse(keepImages) : [];
 
@@ -97,6 +125,7 @@ app.put('/api/products/:id', upload.array('images', 10), (req, res) => {
     stock: stock !== undefined ? Number(stock) : products[idx].stock,
     desc: desc || products[idx].desc,
     emoji: emoji || products[idx].emoji,
+    itemCode: itemCode ? itemCode.trim() : products[idx].itemCode,
     images: [...existingImages, ...newImages],
     updatedAt: new Date().toISOString()
   };
@@ -144,18 +173,26 @@ app.post('/api/orders', (req, res) => {
 
   // Validate stock and calculate total
   let total = 0;
+  const processedItems = [];
   for (const item of items) {
     const p = products.find(x => x.id === item.id);
     if (!p) return res.status(400).json({ error: `Product not found: ${item.id}` });
     if (p.stock < item.qty) return res.status(400).json({ error: `Insufficient stock for: ${p.name}` });
     total += p.price * item.qty;
+    processedItems.push({
+      id: item.id,
+      name: p.name,
+      price: p.price,
+      qty: item.qty,
+      itemCode: p.itemCode || ''
+    });
   }
 
 
   const orderId = 'RR' + Date.now().toString().slice(-6);
   const order = {
     id: orderId, name, phone, email: email || '', address, payment,
-    notes: notes || '', items, total, status: 'New',
+    notes: notes || '', items: processedItems, total, status: 'New',
     createdAt: new Date().toISOString(),
     date: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   };
@@ -203,12 +240,76 @@ app.patch('/api/orders/:id/status', (req, res) => {
 
 app.delete('/api/orders/:id', (req, res) => {
   let orders = readJSON(ORDERS_FILE, []);
+  const products = readJSON(PRODUCTS_FILE, []);
+
+  const order = orders.find(o => o.id === req.params.id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+
+  // Restore stock if the order was Delivered (stock was deducted on delivery)
+  if (order.status === 'Delivered') {
+    for (const item of order.items) {
+      const p = products.find(x => x.id === item.id);
+      if (p) {
+        p.stock += item.qty;
+      }
+    }
+    writeJSON(PRODUCTS_FILE, products);
+  }
 
   orders = orders.filter(o => o.id !== req.params.id);
-
   writeJSON(ORDERS_FILE, orders);
 
   res.json({ ok: true });
+});
+
+// ── Customer Order Lookup ──────────────────────────────────────────────────
+app.get('/api/orders/track-single', (req, res) => {
+  const { orderId, phone } = req.query;
+  if (!orderId || !phone) return res.status(400).json({ error: 'Missing Order ID or Phone Number' });
+
+  const cleanQueryPhone = phone.replace(/\D/g, '');
+  if (cleanQueryPhone.length < 10) return res.status(400).json({ error: 'Invalid phone number' });
+
+  const orders = readJSON(ORDERS_FILE, []);
+  const normalizedQueryId = orderId.trim().toUpperCase().replace('#', '');
+  const o = orders.find(x => x.id.toUpperCase() === normalizedQueryId);
+
+  if (!o) return res.status(404).json({ error: 'Order not found' });
+
+  const cleanOrderPhone = o.phone.replace(/\D/g, '');
+  if (!cleanOrderPhone.includes(cleanQueryPhone) && !cleanQueryPhone.includes(cleanOrderPhone)) {
+    return res.status(403).json({ error: 'Phone number does not match this order' });
+  }
+
+  res.json(o);
+});
+
+app.post('/api/orders/track', (req, res) => {
+  const { trackList } = req.body;
+  if (!trackList || !Array.isArray(trackList)) {
+    return res.status(400).json({ error: 'Invalid tracking request' });
+  }
+
+  const orders = readJSON(ORDERS_FILE, []);
+  const matchedOrders = [];
+
+  for (const item of trackList) {
+    if (!item.id || !item.phone) continue;
+
+    const normalizedId = item.id.trim().toUpperCase().replace('#', '');
+    const cleanPhone = item.phone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) continue;
+
+    const o = orders.find(x => x.id.toUpperCase() === normalizedId);
+    if (o) {
+      const cleanOrderPhone = o.phone.replace(/\D/g, '');
+      if (cleanOrderPhone.includes(cleanPhone) || cleanPhone.includes(cleanOrderPhone)) {
+        matchedOrders.push(o);
+      }
+    }
+  }
+
+  res.json(matchedOrders);
 });
 
 // ── Stats API ──────────────────────────────────────────────────────────────

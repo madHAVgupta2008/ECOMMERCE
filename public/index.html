@@ -191,6 +191,48 @@
   @keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
   .empty-state{text-align:center;padding:60px 20px;color:#a08060}
   .empty-state .big-icon{font-size:4rem;margin-bottom:16px}
+
+  /* MY ORDERS PAGE */
+  .my-orders-hero{background:linear-gradient(135deg,#5C3A1E 0%,#9B1D20 50%,#D4A017 100%);padding:50px 32px 40px;text-align:center;position:relative;overflow:hidden}
+  .my-orders-hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M30 0 L60 30 L30 60 L0 30Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+  .my-orders-hero h1{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--gold-light);position:relative}
+  .my-orders-hero p{color:#f5dbb7;margin-top:8px;font-size:.95rem;position:relative}
+  .lookup-form{max-width:460px;margin:28px auto 0;display:flex;gap:10px;position:relative}
+  .lookup-form input{flex:1;padding:14px 20px;border:none;border-radius:50px;font-family:'Nunito',sans-serif;font-size:1rem;outline:none;background:rgba(255,255,255,.95);color:var(--text-dark)}
+  .lookup-form input::placeholder{color:#a08060}
+  .lookup-form button{padding:14px 28px;background:var(--saffron);color:#fff;border:none;border-radius:50px;font-weight:700;font-size:.95rem;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;white-space:nowrap}
+  .lookup-form button:hover{background:var(--deep-red);transform:scale(1.03)}
+  .lookup-form button:disabled{opacity:.6;cursor:not-allowed;transform:none}
+  .orders-container{max-width:780px;margin:0 auto;padding:32px 20px}
+  .order-card{background:#fff;border-radius:16px;padding:24px;margin-bottom:20px;border:1px solid #eddcc0;box-shadow:0 4px 18px var(--shadow);transition:all .3s}
+  .order-card:hover{box-shadow:0 8px 30px rgba(92,58,30,.2);transform:translateY(-2px)}
+  .order-card-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+  .order-card-id{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--bark)}
+  .order-card-date{font-size:.82rem;color:#a08060}
+  .order-card-items{background:var(--cream);border-radius:10px;padding:14px 18px;margin-bottom:14px}
+  .order-card-item{display:flex;justify-content:space-between;padding:6px 0;font-size:.9rem;border-bottom:1px dashed #d4b483}
+  .order-card-item:last-child{border:none}
+  .order-card-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  .order-card-total{font-size:1.15rem;font-weight:700;color:var(--deep-red)}
+  .order-card-payment{font-size:.82rem;color:#7a5c3a;background:var(--cream);padding:4px 12px;border-radius:50px}
+  .order-card-address{font-size:.82rem;color:#7a5c3a;margin-top:10px;padding-top:10px;border-top:1px solid #eddcc0}
+  .order-card-notes{font-size:.82rem;color:#888;font-style:italic;margin-top:6px}
+  .order-status-pill{padding:6px 16px;border-radius:50px;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .pill-New{background:#dbeafe;color:#1d4ed8}
+  .pill-Processing{background:#fef3c7;color:#92400e}
+  .pill-Dispatched{background:#d1fae5;color:#065f46}
+  .pill-Delivered{background:#e0e7ff;color:#3730a3}
+  .pill-Cancelled{background:#fee2e2;color:#991b1b}
+  .orders-loading{text-align:center;padding:40px;color:#a08060;font-size:1.1rem}
+  .saved-phone-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.2);padding:6px 16px;border-radius:50px;font-size:.85rem;color:var(--gold-light);margin-top:14px;position:relative;cursor:pointer;transition:background .2s}
+  .saved-phone-tag:hover{background:rgba(255,255,255,.3)}
+  .saved-phone-tag .clear-saved{font-size:.7rem;background:rgba(255,255,255,.3);border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+  @media(max-width:700px){
+    .lookup-form{flex-direction:column}
+    .lookup-form button{border-radius:12px}
+    .my-orders-hero h1{font-size:1.6rem}
+    .order-card-header{flex-direction:column;align-items:flex-start}
+  }
   .empty-state h3{font-family:'Playfair Display',serif;font-size:1.4rem;margin-bottom:8px;color:var(--bark)}
 
   .loading-spinner{display:flex;justify-content:center;padding:60px;color:#a08060;font-size:1.1rem}
@@ -249,6 +291,7 @@
   <div class="nav-logo">Rakhi<span>Roots</span></div>
   <div class="nav-tabs">
     <div class="nav-tab active" onclick="showPage('shop',this)">🛍️ Shop</div>
+    <div class="nav-tab" onclick="showPage('my-orders',this)">📦 My Orders</div>
     <div class="nav-tab" onclick="showPage('admin',this)">⚙️ Admin</div>
   </div>
   <button class="cart-btn" onclick="toggleCart()">
@@ -268,6 +311,21 @@
     <div class="filter-chips" id="filterChips"></div>
   </div>
   <div class="product-grid" id="productGrid"><div class="loading-spinner">⏳ Loading rakhis…</div></div>
+</div>
+
+<!-- ══════════════ MY ORDERS ══════════════ -->
+<div class="page" id="page-my-orders">
+  <div class="my-orders-hero">
+    <div style="font-size:2.5rem;margin-bottom:10px;position:relative">📦</div>
+    <p>Track a new order by entering the Order ID and Phone Number</p>
+    <div class="lookup-form">
+      <input type="text" id="lookupOrderId" placeholder="Order ID (e.g. RR123456)">
+      <input type="tel" id="lookupPhone" placeholder="Phone number" maxlength="15">
+      <button id="lookupBtn" onclick="trackNewOrder()">🔍 Track</button>
+    </div>
+    <div id="savedPhoneWrap" style="margin-top:15px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;"></div>
+  </div>
+  <div class="orders-container" id="myOrdersContainer"></div>
 </div>
 
 <!-- ══════════════ ADMIN ══════════════ -->
@@ -320,6 +378,7 @@
               </select>
             </div>
             <div class="form-row"><label>Stock Quantity *</label><input type="number" id="pStock" placeholder="50"></div>
+            <div class="form-row"><label>Item Code *</label><input type="text" id="pItemCode" placeholder="e.g. GZR-01"></div>
             <div class="form-row full"><label>Description *</label><textarea id="pDesc" placeholder="Describe the materials, design, occasion…"></textarea></div>
             <div class="form-row full">
               <label>Product Photos</label>
@@ -443,6 +502,10 @@ function showPage(name, el) {
 
   if (el) el.classList.add('active');
 
+  if (name === 'my-orders') {
+    initSavedPhone();
+  }
+
   if (name === 'admin') {
     loadStats();
     loadRecentOrders();
@@ -483,7 +546,10 @@ function renderProductGrid(list) {
     return `<div class="product-card">
       <div class="product-img">${img}<span class="stock-badge ${sl}">${st}</span></div>
       <div class="product-info">
-        <span class="product-category">${p.category}</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span class="product-category">${p.category}</span>
+          <span style="font-size:0.75rem;font-weight:700;color:var(--text-mid);background:#f2e6d9;padding:2px 8px;border-radius:4px;">Code: ${p.itemCode || ''}</span>
+        </div>
         <div class="product-name">${p.name}</div>
         <div class="product-desc">${p.desc}</div>
         <div class="product-price">₹${p.price}${p.oldPrice?`<small>₹${p.oldPrice}</small>`:''}</div>
@@ -598,7 +664,8 @@ async function placeOrder() {
       id: i.id,
       name: p.name,
       price: p.price,
-      qty: i.qty
+      qty: i.qty,
+      itemCode: p.itemCode || ''
     };
   });
 
@@ -623,7 +690,7 @@ async function placeOrder() {
 
     // WhatsApp Message
     const orderItems = items.map(i =>
-      `${i.name} x ${i.qty}`
+      `${i.name} [${i.itemCode || 'N/A'}] x ${i.qty}`
     ).join('\n');
 
     const whatsappMessage =
@@ -655,8 +722,18 @@ Total: ₹${order.total}`;
     updateCartCount();
     renderCartPanel();
 
+    // Auto-track the placed order
+    try {
+      let trackedList = [];
+      try { trackedList = JSON.parse(localStorage.getItem('rr_tracked_orders') || '[]'); } catch(e) {}
+      if (!trackedList.some(x => x.id.toUpperCase() === order.id.toUpperCase())) {
+        trackedList.push({ id: order.id, phone: phone });
+        localStorage.setItem('rr_tracked_orders', JSON.stringify(trackedList));
+      }
+    } catch(e) {}
+
     await loadProducts();
-filterProducts();
+    filterProducts();
 
     document.getElementById('checkoutModalContent').innerHTML = `
       <div class="success-screen">
@@ -758,7 +835,7 @@ async function loadAdminProducts() {
         <div class="admin-product-img">${imgHtml}</div>
         <div class="admin-product-body">
           <div class="admin-product-name">${p.name}</div>
-          <div class="admin-product-meta">${p.category} · ₹${p.price}</div>
+          <div class="admin-product-meta">${p.category} · <strong>${p.itemCode || ''}</strong> · ₹${p.price}</div>
           <div class="admin-product-footer">
             <div class="stock-input-wrap">
               <span style="font-size:.82rem;font-weight:700;color:${sc}">Stock:</span>
@@ -796,7 +873,7 @@ function buildOrderTableHTML(orders) {
           <div style="font-size:.78rem;color:#a08060;max-width:160px;word-break:break-word">${o.address}</div>
           ${o.notes?`<div style="font-size:.78rem;color:#888;font-style:italic">📝 ${o.notes}</div>`:''}
         </td>
-        <td>${o.items.map(i=>`<div style="font-size:.82rem">${i.name} ×${i.qty}</div>`).join('')}</td>
+        <td>${o.items.map(i=>`<div style="font-size:.82rem">${i.name} [${i.itemCode || 'N/A'}] ×${i.qty}</div>`).join('')}</td>
         <td><strong>₹${o.total}</strong></td>
         <td style="font-size:.82rem;white-space:nowrap">${o.date}</td>
         <td style="font-size:.82rem">${o.payment}</td>
@@ -844,6 +921,7 @@ function editProduct(id) {
   document.getElementById('pOldPrice').value = p.oldPrice||'';
   document.getElementById('pCategory').value = p.category;
   document.getElementById('pStock').value = p.stock;
+  document.getElementById('pItemCode').value = p.itemCode||'';
   document.getElementById('pDesc').value = p.desc;
   newFiles = []; keepImages = [...(p.images||[])];
   renderUploadPreview();
@@ -854,7 +932,7 @@ function editProduct(id) {
 function resetForm() {
   document.getElementById('formTitle').textContent = 'Add New Rakhi';
   document.getElementById('editProductId').value = '';
-  ['pName','pPrice','pOldPrice','pCategory','pStock','pDesc'].forEach(id=>document.getElementById(id).value='');
+  ['pName','pPrice','pOldPrice','pCategory','pStock','pItemCode','pDesc'].forEach(id=>document.getElementById(id).value='');
   newFiles=[]; keepImages=[]; editingId=null;
   renderUploadPreview(); renderExistingImages();
 }
@@ -894,7 +972,8 @@ async function saveProduct() {
   const price = document.getElementById('pPrice').value;
   const category = document.getElementById('pCategory').value;
   const desc = document.getElementById('pDesc').value.trim();
-  if (!name||!price||!category||!desc) { showToast('⚠️ Fill all required fields'); return; }
+  const itemCode = document.getElementById('pItemCode').value.trim();
+  if (!name||!price||!category||!desc||!itemCode) { showToast('⚠️ Fill all required fields'); return; }
 
   const btn = document.getElementById('saveBtn');
   btn.disabled=true; btn.textContent='⏳ Saving…';
@@ -905,6 +984,7 @@ async function saveProduct() {
   fd.append('category',category);
   fd.append('stock',document.getElementById('pStock').value||'0');
   fd.append('desc',desc); fd.append('emoji','🪢');
+  fd.append('itemCode',itemCode);
   newFiles.forEach(f=>fd.append('images',f));
   if (editingId) fd.append('keepImages', JSON.stringify(keepImages));
 
@@ -944,6 +1024,9 @@ async function deleteOrder(id) {
 
     loadOrders();
     loadStats();
+    await loadProducts();
+    filterProducts();
+    loadAdminProducts();
 
   } catch(e) {
 
@@ -951,6 +1034,161 @@ async function deleteOrder(id) {
 
   }
 }
+
+// ─── MY ORDERS LOOKUP ──────────────────────────────────────────────────────
+function getTrackedList() {
+  try {
+    return JSON.parse(localStorage.getItem('rr_tracked_orders') || '[]');
+  } catch(e) {
+    return [];
+  }
+}
+
+function saveTrackedList(list) {
+  localStorage.setItem('rr_tracked_orders', JSON.stringify(list));
+}
+
+async function initSavedPhone() {
+  const trackedList = getTrackedList();
+  const wrap = document.getElementById('savedPhoneWrap');
+  if (trackedList.length > 0) {
+    wrap.innerHTML = trackedList.map(item => `
+      <div class="saved-phone-tag" style="margin: 4px;">
+        #${item.id} <span class="clear-saved" onclick="untrackOrder('${item.id}', event)">✕</span>
+      </div>
+    `).join('');
+    await loadTrackedOrders();
+  } else {
+    wrap.innerHTML = '<div style="color:var(--gold-light);font-size:.9rem;margin-top:14px;">Not tracking any orders yet</div>';
+    document.getElementById('myOrdersContainer').innerHTML = `
+      <div class="empty-state">
+        <div class="big-icon">📦</div>
+        <h3>No tracked orders</h3>
+        <p>Enter an Order ID and Phone Number above to track an order.</p>
+      </div>`;
+  }
+}
+
+function untrackOrder(orderId, event) {
+  if (event) event.stopPropagation();
+  let trackedList = getTrackedList();
+  trackedList = trackedList.filter(x => x.id.toUpperCase() !== orderId.toUpperCase());
+  saveTrackedList(trackedList);
+  showToast(`🗑️ Stopped tracking #${orderId}`);
+  initSavedPhone();
+}
+
+async function loadTrackedOrders() {
+  const trackedList = getTrackedList();
+  const container = document.getElementById('myOrdersContainer');
+  if (!trackedList.length) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = '<div class="orders-loading">⏳ Loading your orders…</div>';
+  try {
+    const orders = await api.post('/api/orders/track', { trackList: trackedList });
+    renderMyOrders(orders);
+  } catch(e) {
+    container.innerHTML = `<div class="empty-state"><div class="big-icon">❌</div><h3>Something went wrong</h3><p>Please try again</p></div>`;
+  }
+}
+
+async function trackNewOrder() {
+  const orderIdInput = document.getElementById('lookupOrderId');
+  const phoneInput = document.getElementById('lookupPhone');
+  const orderId = orderIdInput.value.trim().toUpperCase().replace('#', '');
+  const phone = phoneInput.value.trim();
+
+  if (!orderId) {
+    showToast('⚠️ Enter a valid Order ID');
+    return;
+  }
+  if (!phone || phone.replace(/\D/g,'').length < 10) {
+    showToast('⚠️ Enter a valid 10-digit phone number');
+    return;
+  }
+
+  const btn = document.getElementById('lookupBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Tracking…';
+
+  try {
+    const order = await api.get(`/api/orders/track-single?orderId=${encodeURIComponent(orderId)}&phone=${encodeURIComponent(phone)}`);
+    
+    if (order.error) {
+      showToast('❌ ' + order.error);
+      btn.disabled = false;
+      btn.textContent = '🔍 Track';
+      return;
+    }
+
+    // Add to tracked list if not already present
+    let trackedList = getTrackedList();
+    if (!trackedList.some(x => x.id.toUpperCase() === orderId)) {
+      trackedList.push({ id: orderId, phone: phone });
+      saveTrackedList(trackedList);
+    }
+
+    showToast(`✅ Tracking Order #${orderId}`);
+    orderIdInput.value = '';
+    phoneInput.value = '';
+    initSavedPhone();
+  } catch(e) {
+    showToast('❌ Order not found or invalid phone number');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔍 Track';
+}
+
+function renderMyOrders(orders) {
+  const container = document.getElementById('myOrdersContainer');
+  if (!orders.length) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="big-icon">📭</div>
+      <h3>No orders found</h3>
+      <p>Please check the Order ID and Phone Number entered.</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = orders.map(o => {
+    const itemsHtml = o.items.map(i =>
+      `<div class="order-card-item"><span>${i.name} [${i.itemCode || 'N/A'}] ×${i.qty}</span><span>₹${i.price * i.qty}</span></div>`
+    ).join('');
+
+    return `<div class="order-card">
+      <div class="order-card-header">
+        <div>
+          <div class="order-card-id">#${o.id}</div>
+          <div class="order-card-date">${o.date || new Date(o.createdAt).toLocaleString('en-IN')}</div>
+        </div>
+        <span class="order-status-pill pill-${o.status}">${o.status}</span>
+      </div>
+      <div class="order-card-items">${itemsHtml}</div>
+      <div class="order-card-footer">
+        <div class="order-card-total">Total: ₹${o.total}</div>
+        <span class="order-card-payment">${o.payment}</span>
+      </div>
+      <div class="order-card-address">📍 ${o.address}</div>
+      ${o.notes ? `<div class="order-card-notes">📝 ${o.notes}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// Allow Enter key to trigger lookup
+document.addEventListener('DOMContentLoaded', () => {
+  const phoneInput = document.getElementById('lookupPhone');
+  const orderIdInput = document.getElementById('lookupOrderId');
+  
+  const handleEnter = e => {
+    if (e.key === 'Enter') trackNewOrder();
+  };
+
+  if (phoneInput) phoneInput.addEventListener('keydown', handleEnter);
+  if (orderIdInput) orderIdInput.addEventListener('keydown', handleEnter);
+});
 
 // ─── POLL FOR NEW ORDERS ───────────────────────────────────────────────────
 async function pollNewOrders() {
@@ -980,6 +1218,7 @@ init();
 </script>
 <div class="mobile-bottom-nav">
   <button onclick="showPage('shop')">🏠 Shop</button>
+  <button onclick="showPage('my-orders')">📦 Orders</button>
   <button onclick="toggleCart()">🛒 Cart</button>
   <button onclick="showPage('admin')">⚙️ Admin</button>
 </div>
