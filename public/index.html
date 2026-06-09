@@ -802,9 +802,7 @@ Total: ₹${order.total}`;
       }
     } catch(e) {}
 
-    await loadProducts();
-    filterProducts();
-
+    // Render success screen immediately
     document.getElementById('checkoutModalContent').innerHTML = `
       <div class="success-screen">
         <div class="success-icon">🎉</div>
@@ -836,6 +834,9 @@ Total: ₹${order.total}`;
           🛍️ Continue Shopping
         </button>
       </div>`;
+
+    // Load products and filter in the background (non-blocking)
+    loadProducts().then(filterProducts).catch(() => {});
 
   } catch (e) {
 
