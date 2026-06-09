@@ -1,8 +1,6 @@
 const express = require('express');
-const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 const Product = require('./models/Product');
@@ -20,24 +18,12 @@ mongoose.connect(process.env.MONGO_URI)
     console.error('❌ MongoDB Error:', err);
   });
 
-// ── Upload directory ───────────────────────────────────────────────────────
-const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-
 // ── Middleware ─────────────────────────────────────────────────────────────
 app.use(cors());
-app.use(express.json({ limit: '20mb' }));
+// Increase limit to handle Base64 images (each ~1.3x original file size)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Multer — disk storage for product images
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, uuidv4() + ext);
-  }
-});
-const upload = multer({ storage, limits: { fileSize: 8 * 1024 * 1024 } });
 
 // ── PRODUCTS API ───────────────────────────────────────────────────────────
 
@@ -51,10 +37,10 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// POST create product
-app.post('/api/products', upload.array('images', 10), async (req, res) => {
+// POST create product — images sent as Base64 strings in JSON body
+app.post('/api/products', async (req, res) => {
   try {
-    const { name, price, oldPrice, category, stock, desc, emoji, itemCode } = req.body;
+    const { name, price, oldPrice, category, stock, desc, emoji, itemCode, images } = req.body;
 
     if (!name || !price || !category || !desc || !itemCode) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -67,7 +53,8 @@ app.post('/api/products', upload.array('images', 10), async (req, res) => {
       return res.status(400).json({ error: 'Item Code must be unique' });
     }
 
-    const imageUrls = (req.files || []).map(file => `/uploads/${file.filename}`);
+    // images is an array of Base64 data-URI strings sent from the browser
+    const imageUrls = Array.isArray(images) ? images : [];
 
     const product = await Product.create({
       id: uuidv4(),
@@ -90,10 +77,10 @@ app.post('/api/products', upload.array('images', 10), async (req, res) => {
   }
 });
 
-// PUT update product
-app.put('/api/products/:id', upload.array('images', 10), async (req, res) => {
+// PUT update product — images sent as Base64 strings in JSON body
+app.put('/api/products/:id', async (req, res) => {
   try {
-    const { name, price, oldPrice, category, stock, desc, emoji, keepImages, itemCode } = req.body;
+    const { name, price, oldPrice, category, stock, desc, emoji, keepImages, itemCode, newImages } = req.body;
 
     const product = await Product.findOne({ id: req.params.id });
     if (!product) return res.status(404).json({ error: 'Not found' });
@@ -110,8 +97,9 @@ app.put('/api/products/:id', upload.array('images', 10), async (req, res) => {
       product.itemCode = cleanedItemCode;
     }
 
-    const newImages = (req.files || []).map(f => `/uploads/${f.filename}`);
-    const existingImages = keepImages ? JSON.parse(keepImages) : [];
+    // newImages: new Base64 data-URIs; keepImages: existing Base64/URLs to retain
+    const addedImages = Array.isArray(newImages) ? newImages : [];
+    const existingImages = Array.isArray(keepImages) ? keepImages : (keepImages ? JSON.parse(keepImages) : []);
 
     if (name) product.name = name;
     if (price) product.price = Number(price);
@@ -120,7 +108,7 @@ app.put('/api/products/:id', upload.array('images', 10), async (req, res) => {
     if (stock !== undefined) product.stock = Number(stock);
     if (desc) product.desc = desc;
     if (emoji) product.emoji = emoji;
-    product.images = [...existingImages, ...newImages];
+    product.images = [...existingImages, ...addedImages];
     product.updatedAt = new Date().toISOString();
 
     await product.save();
@@ -150,11 +138,6 @@ app.delete('/api/products/:id', async (req, res) => {
   try {
     const product = await Product.findOne({ id: req.params.id });
     if (product) {
-      // Delete image files from disk
-      (product.images || []).forEach(imgPath => {
-        const fullPath = path.join(__dirname, 'public', imgPath);
-        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-      });
       await Product.deleteOne({ id: req.params.id });
     }
     res.json({ ok: true });
