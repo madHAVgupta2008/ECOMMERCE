@@ -5,6 +5,8 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
+const Product = require('./models/Product');
+const Order = require('./models/Order');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -106,6 +108,20 @@ app.post('/api/products', upload.array('images', 10), (req, res) => {
   products.unshift(product);
   writeJSON(PRODUCTS_FILE, products);
   res.json(product);
+});
+
+app.get('/migrate-products', async (req, res) => {
+
+  const products = readJSON(PRODUCTS_FILE, []);
+
+  await Product.deleteMany({});
+
+  await Product.insertMany(products);
+
+  res.json({
+    migrated: products.length
+  });
+
 });
 
 app.put('/api/products/:id', upload.array('images', 10), (req, res) => {
