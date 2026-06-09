@@ -27,13 +27,50 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ── PRODUCTS API ───────────────────────────────────────────────────────────
 
-// GET all products
+// GET all products — returns metadata and dynamic endpoint URLs for images to keep JSON payload tiny
 app.get('/api/products', async (req, res) => {
   try {
     const products = await Product.find();
-    res.json(products);
+    const mappedProducts = products.map(p => {
+      const pObj = p.toObject();
+      if (pObj.images && pObj.images.length > 0) {
+        pObj.images = pObj.images.map((img, index) => {
+          if (typeof img === 'string' && img.startsWith('data:')) {
+            return `/api/products/${pObj.id}/image/${index}`;
+          }
+          return img; // Keep direct URLs/old uploads paths
+        });
+      }
+      return pObj;
+    });
+    res.json(mappedProducts);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// GET serve single product image decoded from Base64 with browser cache-control
+app.get('/api/products/:id/image/:index', async (req, res) => {
+  try {
+    const product = await Product.findOne({ id: req.params.id });
+    if (!product || !product.images || !product.images[req.params.index]) {
+      return res.status(404).send('Not found');
+    }
+    const base64Str = product.images[req.params.index];
+    const matches = base64Str.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+    if (!matches) {
+      if (base64Str.startsWith('http') || base64Str.startsWith('/')) {
+        return res.redirect(base64Str);
+      }
+      return res.status(400).send('Invalid image format');
+    }
+    const contentType = matches[1];
+    const buffer = Buffer.from(matches[2], 'base64');
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.send(buffer);
+  } catch (err) {
+    res.status(500).send(err.message);
   }
 });
 
@@ -101,6 +138,20 @@ app.put('/api/products/:id', async (req, res) => {
     const addedImages = Array.isArray(newImages) ? newImages : [];
     const existingImages = Array.isArray(keepImages) ? keepImages : (keepImages ? JSON.parse(keepImages) : []);
 
+    // Map dynamic URLs back to original Base64 values stored in database
+    const resolvedExistingImages = [];
+    for (const url of existingImages) {
+      if (typeof url === 'string' && url.includes(`/api/products/${req.params.id}/image/`)) {
+        const parts = url.split('/');
+        const index = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(index) && product.images && product.images[index]) {
+          resolvedExistingImages.push(product.images[index]);
+        }
+      } else {
+        resolvedExistingImages.push(url);
+      }
+    }
+
     if (name) product.name = name;
     if (price) product.price = Number(price);
     if (oldPrice !== undefined) product.oldPrice = oldPrice ? Number(oldPrice) : null;
@@ -108,7 +159,7 @@ app.put('/api/products/:id', async (req, res) => {
     if (stock !== undefined) product.stock = Number(stock);
     if (desc) product.desc = desc;
     if (emoji) product.emoji = emoji;
-    product.images = [...existingImages, ...addedImages];
+    product.images = [...resolvedExistingImages, ...addedImages];
     product.updatedAt = new Date().toISOString();
 
     await product.save();
