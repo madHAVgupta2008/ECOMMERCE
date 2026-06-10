@@ -1041,7 +1041,7 @@ function removeNewFile(i) { newFiles.splice(i,1); renderUploadPreview(); }
 function removeExistingImage(i) { keepImages.splice(i,1); renderExistingImages(); }
 
 // Compress and convert a File object to a Base64 JPEG data-URI
-function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
+function compressImage(file, maxWidth = 400, maxHeight = 400, quality = 0.45) {
   return new Promise((resolve, reject) => {
     if (!file.type.startsWith('image/')) {
       const reader = new FileReader();
