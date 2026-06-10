@@ -3,11 +3,18 @@ const cors = require('cors');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const Product = require('./models/Product');
 const Order = require('./models/Order');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ── JWT Secret (use env var in production, fallback for dev) ───────────────
+const JWT_SECRET = process.env.JWT_SECRET || 'rr_super_secret_jwt_key_change_in_prod_' + Math.random();
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '956002';
 
 // ── MongoDB Connection ─────────────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI)
@@ -15,19 +22,86 @@ mongoose.connect(process.env.MONGO_URI)
     console.log('✅ MongoDB Connected');
   })
   .catch((err) => {
-    console.error('❌ MongoDB Error:', err);
+    console.error('❌ MongoDB Error:', err.message);
   });
 
-// ── Middleware ─────────────────────────────────────────────────────────────
-app.use(cors());
-// Increase limit to handle Base64 images (each ~1.3x original file size)
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// ── CORS — restrict to same origin (or env-defined allowed origin) ─────────
+const allowedOrigin = process.env.ALLOWED_ORIGIN || null; // e.g. "https://yourdomain.com"
+app.use(cors(allowedOrigin
+  ? { origin: allowedOrigin, credentials: true }
+  : { origin: /^http:\/\/localhost(:\d+)?$/, credentials: true }
+));
+
+// ── Body Parsers — reduced limit ───────────────────────────────────────────
+// Images are now compressed on the client side so 10 MB is plenty
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ── Rate Limiters ──────────────────────────────────────────────────────────
+// General API limit: 200 requests per 15 minutes per IP
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again later.' }
+});
+
+// Strict limit for auth endpoint: 10 attempts per 15 minutes per IP
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Please wait 15 minutes.' }
+});
+
+// Strict limit for order placement: 20 orders per 15 minutes per IP
+const orderLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again later.' }
+});
+
+app.use('/api/', generalLimiter);
+
+// ── Auth Middleware ────────────────────────────────────────────────────────
+function requireAdmin(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const token = authHeader.slice(7);
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    req.admin = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
+
+// ── ADMIN LOGIN ────────────────────────────────────────────────────────────
+app.post('/api/admin/login', authLimiter, (req, res) => {
+  const { username, password } = req.body;
+  if (
+    typeof username !== 'string' || typeof password !== 'string' ||
+    username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD
+  ) {
+    // Delay response slightly to slow brute-force
+    return setTimeout(() => res.status(401).json({ error: 'Invalid credentials' }), 500);
+  }
+  const token = jwt.sign({ role: 'admin', username }, JWT_SECRET, { expiresIn: '8h' });
+  res.json({ token, expiresIn: 8 * 60 * 60 });
+});
 
 // ── PRODUCTS API ───────────────────────────────────────────────────────────
 
-// GET all products — returns metadata and dynamic endpoint URLs for images to keep JSON payload tiny
+// GET all products — public (customers need to browse)
 app.get('/api/products', async (req, res) => {
   try {
     const products = await Product.find();
@@ -38,18 +112,18 @@ app.get('/api/products', async (req, res) => {
           if (typeof img === 'string' && img.startsWith('data:')) {
             return `/api/products/${pObj.id}/image/${index}`;
           }
-          return img; // Keep direct URLs/old uploads paths
+          return img;
         });
       }
       return pObj;
     });
     res.json(mappedProducts);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to load products' });
   }
 });
 
-// GET serve single product image decoded from Base64 with browser cache-control
+// GET serve single product image — public
 app.get('/api/products/:id/image/:index', async (req, res) => {
   try {
     const product = await Product.findOne({ id: req.params.id });
@@ -70,12 +144,12 @@ app.get('/api/products/:id/image/:index', async (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     res.send(buffer);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send('Server error');
   }
 });
 
-// POST create product — images sent as Base64 strings in JSON body
-app.post('/api/products', async (req, res) => {
+// POST create product — ADMIN ONLY
+app.post('/api/products', requireAdmin, async (req, res) => {
   try {
     const { name, price, oldPrice, category, stock, desc, emoji, itemCode, images } = req.body;
 
@@ -90,7 +164,6 @@ app.post('/api/products', async (req, res) => {
       return res.status(400).json({ error: 'Item Code must be unique' });
     }
 
-    // images is an array of Base64 data-URI strings sent from the browser
     const imageUrls = Array.isArray(images) ? images : [];
 
     const product = await Product.create({
@@ -110,12 +183,12 @@ app.post('/api/products', async (req, res) => {
     res.json(product);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to create product' });
   }
 });
 
-// PUT update product — images sent as Base64 strings in JSON body
-app.put('/api/products/:id', async (req, res) => {
+// PUT update product — ADMIN ONLY
+app.put('/api/products/:id', requireAdmin, async (req, res) => {
   try {
     const { name, price, oldPrice, category, stock, desc, emoji, keepImages, itemCode, newImages } = req.body;
 
@@ -134,11 +207,9 @@ app.put('/api/products/:id', async (req, res) => {
       product.itemCode = cleanedItemCode;
     }
 
-    // newImages: new Base64 data-URIs; keepImages: existing Base64/URLs to retain
     const addedImages = Array.isArray(newImages) ? newImages : [];
     const existingImages = Array.isArray(keepImages) ? keepImages : (keepImages ? JSON.parse(keepImages) : []);
 
-    // Map dynamic URLs back to original Base64 values stored in database
     const resolvedExistingImages = [];
     for (const url of existingImages) {
       if (typeof url === 'string' && url.includes(`/api/products/${req.params.id}/image/`)) {
@@ -166,12 +237,12 @@ app.put('/api/products/:id', async (req, res) => {
     res.json(product);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to update product' });
   }
 });
 
-// PATCH update product stock
-app.patch('/api/products/:id/stock', async (req, res) => {
+// PATCH update product stock — ADMIN ONLY
+app.patch('/api/products/:id/stock', requireAdmin, async (req, res) => {
   try {
     const product = await Product.findOne({ id: req.params.id });
     if (!product) return res.status(404).json({ error: 'Not found' });
@@ -180,12 +251,12 @@ app.patch('/api/products/:id/stock', async (req, res) => {
     await product.save();
     res.json(product);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to update stock' });
   }
 });
 
-// DELETE product
-app.delete('/api/products/:id', async (req, res) => {
+// DELETE product — ADMIN ONLY
+app.delete('/api/products/:id', requireAdmin, async (req, res) => {
   try {
     const product = await Product.findOne({ id: req.params.id });
     if (product) {
@@ -193,31 +264,31 @@ app.delete('/api/products/:id', async (req, res) => {
     }
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to delete product' });
   }
 });
 
 // ── ORDERS API ─────────────────────────────────────────────────────────────
 
-// GET all orders
-app.get('/api/orders', async (req, res) => {
+// GET all orders — ADMIN ONLY
+app.get('/api/orders', requireAdmin, async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to load orders' });
   }
 });
 
-// POST create order
-app.post('/api/orders', async (req, res) => {
+// POST create order — public but rate limited
+app.post('/api/orders', orderLimiter, async (req, res) => {
   try {
     const { name, phone, email, address, payment, notes, items } = req.body;
 
     if (!name || !phone || !address || !payment || !items || !items.length)
       return res.status(400).json({ error: 'Missing required fields' });
 
-    // Validate stock and calculate total
+    // Validate stock and calculate total server-side
     let total = 0;
     const processedItems = [];
     for (const item of items) {
@@ -260,12 +331,12 @@ app.post('/api/orders', async (req, res) => {
     res.json(order);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to place order. Please try again.' });
   }
 });
 
-// PATCH update order status (also deducts stock on Delivered)
-app.patch('/api/orders/:id/status', async (req, res) => {
+// PATCH update order status — ADMIN ONLY
+app.patch('/api/orders/:id/status', requireAdmin, async (req, res) => {
   try {
     const order = await Order.findOne({ id: req.params.id });
     if (!order) return res.status(404).json({ error: 'Not found' });
@@ -291,12 +362,12 @@ app.patch('/api/orders/:id/status', async (req, res) => {
     res.json(order);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to update order status' });
   }
 });
 
-// DELETE order (restores stock if Delivered)
-app.delete('/api/orders/:id', async (req, res) => {
+// DELETE order — ADMIN ONLY
+app.delete('/api/orders/:id', requireAdmin, async (req, res) => {
   try {
     const order = await Order.findOne({ id: req.params.id });
     if (!order) return res.status(404).json({ error: 'Order not found' });
@@ -316,13 +387,13 @@ app.delete('/api/orders/:id', async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to delete order' });
   }
 });
 
-// ── Customer Order Lookup ──────────────────────────────────────────────────
+// ── Customer Order Lookup (public, rate-limited via generalLimiter) ────────
 
-// GET track single order by ID + phone
+// GET track single order by ID + phone — public
 app.get('/api/orders/track-single', async (req, res) => {
   try {
     const { orderId, phone } = req.query;
@@ -344,11 +415,11 @@ app.get('/api/orders/track-single', async (req, res) => {
 
     res.json(o);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-// POST track multiple orders
+// POST track multiple orders — public
 app.post('/api/orders/track', async (req, res) => {
   try {
     const { trackList } = req.body;
@@ -375,12 +446,12 @@ app.post('/api/orders/track', async (req, res) => {
 
     res.json(matchedOrders);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-// ── Stats API ──────────────────────────────────────────────────────────────
-app.get('/api/stats', async (req, res) => {
+// ── Stats API — ADMIN ONLY ─────────────────────────────────────────────────
+app.get('/api/stats', requireAdmin, async (req, res) => {
   try {
     const [products, orders] = await Promise.all([
       Product.find(),
@@ -399,12 +470,22 @@ app.get('/api/stats', async (req, res) => {
       newOrders: orders.filter(o => o.status === 'New').length,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to load stats' });
+  }
+});
+
+// ── New Orders Count — public (only count, no sensitive data) ─────────────
+app.get('/api/new-orders-count', async (req, res) => {
+  try {
+    const count = await Order.countDocuments({ status: 'New' });
+    res.json({ newOrders: count });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 // ── MongoDB connection test ────────────────────────────────────────────────
-app.get('/mongo-test', async (req, res) => {
+app.get('/mongo-test', requireAdmin, async (req, res) => {
   res.json({
     connected: mongoose.connection.readyState === 1,
     state: mongoose.connection.readyState
@@ -418,4 +499,9 @@ app.listen(PORT, () => {
   console.log(`\n🪢  RakhiRoots server running at http://localhost:${PORT}`);
   console.log(`   Admin Panel: http://localhost:${PORT}/#admin`);
   console.log(`   MongoDB connected via MONGO_URI env var\n`);
+  console.log(`   ⚠️  For production, set these environment variables:`);
+  console.log(`      JWT_SECRET=<random-64-char-string>`);
+  console.log(`      ADMIN_USERNAME=<your-username>`);
+  console.log(`      ADMIN_PASSWORD=<your-strong-password>`);
+  console.log(`      ALLOWED_ORIGIN=https://yourdomain.com\n`);
 });

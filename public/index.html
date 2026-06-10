@@ -484,6 +484,28 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- ADMIN LOGIN MODAL -->
+<div class="modal-overlay" id="adminLoginModal" style="z-index:500">
+  <div class="modal" style="max-width:400px;border-radius:24px;padding:36px 28px">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:2.5rem;margin-bottom:8px">🔐</div>
+      <h2 style="font-family:'Playfair Display',serif;color:var(--bark);font-size:1.5rem">Admin Login</h2>
+      <p style="color:#7a5c3a;font-size:.9rem;margin-top:6px">Enter your credentials to continue</p>
+    </div>
+    <div class="form-row">
+      <label>Username</label>
+      <input type="text" id="adminUsername" placeholder="Username" autocomplete="username">
+    </div>
+    <div class="form-row">
+      <label>Password</label>
+      <input type="password" id="adminPassword" placeholder="Password" autocomplete="current-password">
+    </div>
+    <div id="adminLoginError" style="color:#c0392b;font-size:.85rem;margin-bottom:12px;display:none;font-weight:600"></div>
+    <button class="btn-primary" id="adminLoginBtn" onclick="submitAdminLogin()" style="width:100%;margin-top:8px">🔓 Login</button>
+    <button class="btn-secondary" onclick="cancelAdminLogin()" style="width:100%;margin-top:10px">Cancel</button>
+  </div>
+</div>
+
 <script>
 // ─── STATE ─────────────────────────────────────────────────────────────────
 let allProducts = [];
@@ -494,12 +516,24 @@ let keepImages = [];     // URLs to keep on edit
 let editingId = null;
 
 // ─── API ───────────────────────────────────────────────────────────────────
+function getAdminToken() { return sessionStorage.getItem('rr_admin_token') || ''; }
+
+function adminHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAdminToken() };
+}
+
 const api = {
-  get: url => fetch(url).then(r => r.json()),
-  post: (url, body) => fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) }).then(r => r.json()),
-  put: (url, body) => fetch(url, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) }).then(r => r.json()),
-  patch: (url, body) => fetch(url, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) }).then(r => r.json()),
-  del: url => fetch(url, { method: 'DELETE' }).then(r => r.json())
+  get:   url        => fetch(url).then(r => r.json()),
+  post:  (url, body) => fetch(url, { method: 'POST',   headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) }).then(r => r.json()),
+  put:   (url, body) => fetch(url, { method: 'PUT',    headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) }).then(r => r.json()),
+  patch: (url, body) => fetch(url, { method: 'PATCH',  headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) }).then(r => r.json()),
+  del:   url        => fetch(url, { method: 'DELETE' }).then(r => r.json()),
+  // Authenticated variants for admin calls
+  adminGet:   url        => fetch(url, { headers: adminHeaders() }).then(r => r.json()),
+  adminPost:  (url, body) => fetch(url, { method: 'POST',  headers: adminHeaders(), body: JSON.stringify(body) }).then(r => r.json()),
+  adminPut:   (url, body) => fetch(url, { method: 'PUT',   headers: adminHeaders(), body: JSON.stringify(body) }).then(r => r.json()),
+  adminPatch: (url, body) => fetch(url, { method: 'PATCH', headers: adminHeaders(), body: JSON.stringify(body) }).then(r => r.json()),
+  adminDel:   url        => fetch(url, { method: 'DELETE', headers: adminHeaders() }).then(r => r.json()),
 };
 
 // ─── INIT ──────────────────────────────────────────────────────────────────
@@ -527,26 +561,19 @@ async function refreshAll() {
 }
 
 // ─── PAGE NAV ──────────────────────────────────────────────────────────────
+// Pending nav target for after login
+let _pendingAdminNav = null;
+
 function showPage(name, el, bnavId) {
 
   if (name === 'admin') {
-
-    const loggedIn = localStorage.getItem('adminLoggedIn');
-
-    if (loggedIn !== 'true') {
-
-      const username = prompt('Admin Username');
-      const password = prompt('Admin Password');
-
-      if (
-        username === 'admin' &&
-        password === '956002'
-      ) {
-        localStorage.setItem('adminLoggedIn', 'true');
-      } else {
-        showToast('❌ Invalid Admin Credentials');
-        return;
-      }
+    const token = getAdminToken();
+    if (!token) {
+      // Show login modal, remember where user wanted to go
+      _pendingAdminNav = { name, el, bnavId };
+      document.getElementById('adminLoginModal').classList.add('open');
+      setTimeout(() => document.getElementById('adminUsername').focus(), 100);
+      return;
     }
   }
 
@@ -866,7 +893,8 @@ function showAdminSection(name, el) {
 
 async function loadStats() {
   try {
-    const s = await api.get('/api/stats');
+    const s = await api.adminGet('/api/stats');
+    if (s.error) { document.getElementById('statsGrid').innerHTML='<p style="padding:20px;color:#a08060">Could not load stats</p>'; return; }
     document.getElementById('statsGrid').innerHTML = [
       {icon:'🛍️', val:s.totalProducts, label:'Total Products'},
       {icon:'📦', val:s.totalOrders, label:'Total Orders'},
@@ -884,16 +912,16 @@ async function loadStats() {
 
 async function loadRecentOrders() {
   try {
-    const orders = await api.get('/api/orders');
+    const orders = await api.adminGet('/api/orders');
     const wrap = document.getElementById('recentOrdersWrap');
-    if (!orders.length) { wrap.innerHTML=`<div class="empty-state"><div class="big-icon">📦</div><h3>No orders yet</h3></div>`; return; }
+    if (!Array.isArray(orders) || !orders.length) { wrap.innerHTML=`<div class="empty-state"><div class="big-icon">📦</div><h3>No orders yet</h3></div>`; return; }
     wrap.innerHTML = `<div style="overflow-x:auto">${buildOrderTableHTML(orders.slice(0,5))}</div>`;
   } catch(e) {}
 }
 
 async function loadAdminProducts() {
   try {
-    allProducts = await api.get('/api/products');
+    allProducts = await api.get('/api/products'); // public endpoint, no auth needed
     const grid = document.getElementById('adminProductsGrid');
     if (!allProducts.length) {
       grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="big-icon">🪢</div><h3>No products yet</h3><p>Add your first rakhi!</p></div>`;
@@ -925,9 +953,9 @@ async function loadAdminProducts() {
 
 async function loadOrders() {
   try {
-    const orders = await api.get('/api/orders');
+    const orders = await api.adminGet('/api/orders');
     const wrap = document.getElementById('ordersTableWrap');
-    if (!orders.length) { wrap.innerHTML=`<div class="empty-state"><div class="big-icon">📦</div><h3>No orders yet</h3><p>Customer orders will appear here</p></div>`; return; }
+    if (!Array.isArray(orders) || !orders.length) { wrap.innerHTML=`<div class="empty-state"><div class="big-icon">📦</div><h3>No orders yet</h3><p>Customer orders will appear here</p></div>`; return; }
     wrap.innerHTML = buildOrderTableHTML(orders);
   } catch(e) {}
 }
@@ -966,7 +994,7 @@ function buildOrderTableHTML(orders) {
 
 async function updateStock(id, val) {
   try {
-    await api.patch(`/api/products/${id}/stock`, { stock: Number(val) });
+    await api.adminPatch(`/api/products/${id}/stock`, { stock: Number(val) });
     const p = allProducts.find(x=>x.id===id); if(p) p.stock=Number(val);
     loadStats();
   } catch(e) { showToast('❌ Failed to update stock'); }
@@ -975,7 +1003,7 @@ async function updateStock(id, val) {
 async function deleteProduct(id) {
   if (!confirm('Delete this rakhi?')) return;
   try {
-    await api.del(`/api/products/${id}`);
+    await api.adminDel(`/api/products/${id}`);
     allProducts = allProducts.filter(x=>x.id!==id);
     loadAdminProducts(); renderCategoryChips(); filterProducts(); loadStats();
     showToast('🗑️ Product deleted');
@@ -1111,11 +1139,11 @@ async function saveProduct() {
     if (editingId) {
       payload.keepImages = keepImages;
       payload.newImages = newBase64Images;
-      await api.put(`/api/products/${editingId}`, payload);
+      await api.adminPut(`/api/products/${editingId}`, payload);
       showToast('✅ Rakhi updated!');
     } else {
       payload.images = newBase64Images;
-      await api.post('/api/products', payload);
+      await api.adminPost('/api/products', payload);
       showToast('✅ Rakhi added!');
     }
 
@@ -1129,7 +1157,7 @@ async function saveProduct() {
 
 async function updateOrderStatus(id, status) {
   try {
-    await api.patch(`/api/orders/${id}/status`, { status });
+    await api.adminPatch(`/api/orders/${id}/status`, { status });
     showToast(`📦 Order #${id} → ${status}`);
     loadStats();
   } catch(e) { showToast('❌ Failed to update status'); }
@@ -1141,7 +1169,7 @@ async function deleteOrder(id) {
 
   try {
 
-    await api.del(`/api/orders/${id}`);
+    await api.adminDel(`/api/orders/${id}`);
 
     showToast('🗑️ Order Deleted');
 
@@ -1313,10 +1341,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (orderIdInput) orderIdInput.addEventListener('keydown', handleEnter);
 });
 
-// ─── POLL FOR NEW ORDERS ───────────────────────────────────────────────────
+// ─── POLL FOR NEW ORDERS (uses public count endpoint — no auth needed) ──────
 async function pollNewOrders() {
   try {
-    const s = await api.get('/api/stats');
+    const s = await api.get('/api/new-orders-count');
     const dot = document.getElementById('newOrdersDot');
     if (s.newOrders>0) { dot.textContent=s.newOrders; dot.style.display='inline-flex'; }
     else dot.style.display='none';
@@ -1332,10 +1360,89 @@ function showToast(msg) {
 }
 
 function adminLogout() {
-  localStorage.removeItem('adminLoggedIn');
-  showToast('👋 Logged Out');
-  location.reload();
+  sessionStorage.removeItem('rr_admin_token');
+  showToast('👋 Logged out successfully');
+  // Navigate back to shop page
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-shop').classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.nav-tab').classList.add('active');
+  document.querySelectorAll('#mobileBottomNav button').forEach(b => b.classList.remove('active'));
+  const shopBtn = document.getElementById('bnav-shop');
+  if (shopBtn) shopBtn.classList.add('active');
 }
+
+// ─── ADMIN LOGIN MODAL LOGIC ────────────────────────────────────────────────
+function cancelAdminLogin() {
+  document.getElementById('adminLoginModal').classList.remove('open');
+  document.getElementById('adminUsername').value = '';
+  document.getElementById('adminPassword').value = '';
+  document.getElementById('adminLoginError').style.display = 'none';
+  _pendingAdminNav = null;
+}
+
+async function submitAdminLogin() {
+  const username = document.getElementById('adminUsername').value.trim();
+  const password = document.getElementById('adminPassword').value;
+  const errEl = document.getElementById('adminLoginError');
+  const btn = document.getElementById('adminLoginBtn');
+
+  if (!username || !password) {
+    errEl.textContent = 'Please enter username and password.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Logging in…';
+  errEl.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      errEl.textContent = data.error || 'Invalid credentials. Please try again.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '🔓 Login';
+      document.getElementById('adminPassword').value = '';
+      return;
+    }
+
+    // Store token in sessionStorage (cleared when browser tab closes)
+    sessionStorage.setItem('rr_admin_token', data.token);
+    document.getElementById('adminLoginModal').classList.remove('open');
+    document.getElementById('adminUsername').value = '';
+    document.getElementById('adminPassword').value = '';
+
+    showToast('✅ Logged in as Admin');
+
+    // Complete the navigation that was interrupted
+    if (_pendingAdminNav) {
+      const { name, el, bnavId } = _pendingAdminNav;
+      _pendingAdminNav = null;
+      showPage(name, el, bnavId);
+    }
+  } catch (e) {
+    errEl.textContent = 'Connection error. Please try again.';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '🔓 Login';
+  }
+}
+
+// Allow Enter key in login form
+document.addEventListener('DOMContentLoaded', () => {
+  ['adminUsername','adminPassword'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') submitAdminLogin(); });
+  });
+});
 
 init();
 </script>
