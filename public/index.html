@@ -430,8 +430,8 @@
           <input type="hidden" id="editProductId">
           <div class="form-grid">
             <div class="form-row full"><label>Product Name *</label><input type="text" id="pName" placeholder="e.g. Golden Zari Rakhi"></div>
-            <div class="form-row"><label>Price (₹) *</label><input type="number" id="pPrice" placeholder="199"></div>
-            <div class="form-row"><label>Original Price ₹ <small style="font-weight:400;color:#999">(for strikethrough)</small></label><input type="number" id="pOldPrice" placeholder="299"></div>
+            <div class="form-row"><label>Price (₹) *</label><input type="number" id="pPrice" placeholder="199" onwheel="this.blur()"></div>
+            <div class="form-row"><label>Original Price ₹ <small style="font-weight:400;color:#999">(for strikethrough)</small></label><input type="number" id="pOldPrice" placeholder="299" onwheel="this.blur()"></div>
             <div class="form-row"><label>Category *</label>
               <select id="pCategory">
                 <option value="">Select category</option>
@@ -439,7 +439,7 @@
                 <option>Thread</option><option>Pearl</option><option>Combo Set</option><option>Lumba</option><option>Other</option>
               </select>
             </div>
-            <div class="form-row"><label>Stock Quantity *</label><input type="number" id="pStock" placeholder="50"></div>
+            <div class="form-row"><label>Stock Quantity *</label><input type="number" id="pStock" placeholder="50" onwheel="this.blur()"></div>
             <div class="form-row"><label>Item Code *</label><input type="text" id="pItemCode" placeholder="e.g. GZR-01"></div>
             <div class="form-row full"><label>Description *</label><textarea id="pDesc" placeholder="Describe the materials, design, occasion…"></textarea></div>
             <div class="form-row full">
