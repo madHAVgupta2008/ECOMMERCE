@@ -1298,7 +1298,7 @@
 
     .toast {
       position: fixed;
-      bottom: 24px;
+      bottom: 80px;
       left: 50%;
       transform: translateX(-50%);
       background: var(--bark);
@@ -1307,10 +1307,13 @@
       border-radius: 50px;
       font-weight: 600;
       font-size: .95rem;
-      z-index: 999;
+      z-index: 10001;
       box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
       display: none;
-      animation: slideUp .3s ease
+      animation: slideUp .3s ease;
+      white-space: nowrap;
+      max-width: 90vw;
+      text-align: center
     }
 
     @keyframes slideUp {
