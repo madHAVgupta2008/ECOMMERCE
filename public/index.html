@@ -2364,6 +2364,17 @@
     }
 
     // ─── SHOP ──────────────────────────────────────────────────────────────────
+
+    // Fisher-Yates shuffle – returns a new shuffled array, never mutates original
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
     function renderCategoryChips() {
       const cats = ['All', ...new Set(allProducts.map(p => p.category))];
       document.getElementById('filterChips').innerHTML = cats.map(c =>
@@ -2377,7 +2388,13 @@
       const q = (document.getElementById('searchInput').value || '').toLowerCase();
       let list = allProducts;
       if (currentCategory !== 'All') list = list.filter(p => p.category === currentCategory);
-      if (q) list = list.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
+      if (q) {
+        // Keep search results in natural order for relevance
+        list = list.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
+      } else {
+        // Shuffle on category switch / initial load so different items appear on top each time
+        list = shuffleArray(list);
+      }
       renderProductGrid(list);
     }
 
