@@ -2271,6 +2271,7 @@
     // ─── INIT ──────────────────────────────────────────────────────────────────
     async function init() {
       await Promise.all([loadProducts(), loadCategories()]);
+      allProducts = shuffleArray(allProducts); // shuffle once on load, order stays fixed for the session
       renderCategoryChips();
       filterProducts();
       pollNewOrders();
@@ -2386,15 +2387,9 @@
 
     function filterProducts() {
       const q = (document.getElementById('searchInput').value || '').toLowerCase();
-      let list = allProducts;
+      let list = allProducts; // already shuffled once at load — order preserved across category switches
       if (currentCategory !== 'All') list = list.filter(p => p.category === currentCategory);
-      if (q) {
-        // Keep search results in natural order for relevance
-        list = list.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
-      } else {
-        // Shuffle on category switch / initial load so different items appear on top each time
-        list = shuffleArray(list);
-      }
+      if (q) list = list.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
       renderProductGrid(list);
     }
 
