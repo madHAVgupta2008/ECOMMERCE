@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const Product = require('./models/Product');
 const Order = require('./models/Order');
+const Category = require('./models/Category');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -97,6 +98,73 @@ app.post('/api/admin/login', authLimiter, (req, res) => {
   }
   const token = jwt.sign({ role: 'admin', username }, JWT_SECRET, { expiresIn: '8h' });
   res.json({ token, expiresIn: 8 * 60 * 60 });
+});
+
+// ── CATEGORIES API ────────────────────────────────────────────────────────
+
+// GET all categories — public
+app.get('/api/categories', async (req, res) => {
+  try {
+    const cats = await Category.find().sort({ name: 1 });
+    res.json(cats);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load categories' });
+  }
+});
+
+// POST create category — ADMIN ONLY
+app.post('/api/categories', requireAdmin, async (req, res) => {
+  try {
+    const { name, emoji } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ error: 'Category name is required' });
+    const trimmedName = name.trim();
+    const existing = await Category.findOne({ name: { $regex: new RegExp(`^${trimmedName}$`, 'i') } });
+    if (existing) return res.status(400).json({ error: 'Category already exists' });
+    const cat = await Category.create({ name: trimmedName, emoji: emoji || '🏷️' });
+    res.json(cat);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create category' });
+  }
+});
+
+// PUT rename/update category — ADMIN ONLY
+app.put('/api/categories/:id', requireAdmin, async (req, res) => {
+  try {
+    const { name, emoji } = req.body;
+    const cat = await Category.findById(req.params.id);
+    if (!cat) return res.status(404).json({ error: 'Not found' });
+    if (name && name.trim()) {
+      const trimmedName = name.trim();
+      const duplicate = await Category.findOne({
+        name: { $regex: new RegExp(`^${trimmedName}$`, 'i') },
+        _id: { $ne: cat._id }
+      });
+      if (duplicate) return res.status(400).json({ error: 'Category name already exists' });
+      // Also rename the category on all products that use it
+      await Product.updateMany({ category: cat.name }, { $set: { category: trimmedName } });
+      cat.name = trimmedName;
+    }
+    if (emoji) cat.emoji = emoji;
+    await cat.save();
+    res.json(cat);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update category' });
+  }
+});
+
+// DELETE category — ADMIN ONLY
+app.delete('/api/categories/:id', requireAdmin, async (req, res) => {
+  try {
+    const cat = await Category.findById(req.params.id);
+    if (!cat) return res.status(404).json({ error: 'Not found' });
+    // Check if any product is using this category
+    const inUse = await Product.countDocuments({ category: cat.name });
+    if (inUse > 0) return res.status(400).json({ error: `Cannot delete — ${inUse} product(s) use this category` });
+    await Category.deleteOne({ _id: cat._id });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete category' });
+  }
 });
 
 // ── PRODUCTS API ───────────────────────────────────────────────────────────
