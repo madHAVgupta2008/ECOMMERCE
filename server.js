@@ -199,18 +199,29 @@ app.get('/api/products/:id/image/:index', async (req, res) => {
       return res.status(404).send('Not found');
     }
     const base64Str = product.images[req.params.index];
-    const matches = base64Str.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
-    if (!matches) {
-      if (base64Str.startsWith('http') || base64Str.startsWith('/')) {
-        return res.redirect(base64Str);
+    const commaIdx = base64Str.indexOf(',');
+    
+    if (commaIdx !== -1 && base64Str.startsWith('data:')) {
+      const meta = base64Str.substring(5, commaIdx);
+      const base64Data = base64Str.substring(commaIdx + 1);
+      
+      let contentType = 'image/jpeg';
+      if (meta) {
+        const parts = meta.split(';');
+        if (parts[0] && parts[0] !== 'base64') contentType = parts[0];
       }
-      return res.status(400).send('Invalid image format');
+      
+      const buffer = Buffer.from(base64Data, 'base64');
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      return res.send(buffer);
     }
-    const contentType = matches[1];
-    const buffer = Buffer.from(matches[2], 'base64');
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    res.send(buffer);
+    
+    if (base64Str.startsWith('http') || base64Str.startsWith('/')) {
+      return res.redirect(base64Str);
+    }
+    
+    return res.status(400).send('Invalid image format');
   } catch (err) {
     res.status(500).send('Server error');
   }
