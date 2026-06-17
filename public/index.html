@@ -3064,7 +3064,7 @@ Total: ₹${order.total}`;
 
       try {
         // Convert and compress all new File objects to Base64 JPEGs
-        const newBase64Images = await Promise.all(newFiles.map(compressImage));
+        const newBase64Images = await Promise.all(newFiles.map(file => compressImage(file)));
 
         const payload = {
           name,
