@@ -2129,12 +2129,12 @@
     /* On mobile, lift the checkout modal above the 64px bottom nav bar */
     @media(max-width:700px) {
       .modal-overlay {
-        bottom: calc(64px + env(safe-area-inset-bottom));
+        inset: unset;
+        position: fixed;
         top: 0;
         left: 0;
         right: 0;
-        inset: unset;
-        position: fixed;
+        bottom: calc(64px + env(safe-area-inset-bottom));
         align-items: flex-end;
         justify-content: center;
       }
