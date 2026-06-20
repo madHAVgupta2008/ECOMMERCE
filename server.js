@@ -595,10 +595,16 @@ app.post('/api/offline-sales', requireAdmin, async (req, res) => {
     const { itemCode, qty, amount, note, date } = req.body;
     if (!itemCode || !qty || !amount || !date)
       return res.status(400).json({ error: 'Missing required fields' });
-    // Look up product name automatically from item code
+    // Look up product by item code
     const product = await Product.findOne({ itemCode: itemCode.trim().toUpperCase() });
     if (!product)
       return res.status(400).json({ error: `No product found with item code: ${itemCode.trim().toUpperCase()}` });
+    // Check sufficient stock
+    if (product.stock < Number(qty))
+      return res.status(400).json({ error: `Insufficient stock. Available: ${product.stock}` });
+    // Deduct stock
+    product.stock = Math.max(0, product.stock - Number(qty));
+    await product.save();
     const sale = await OfflineSale.create({
       itemCode: itemCode.trim().toUpperCase(),
       itemName: product.name,
@@ -613,9 +619,17 @@ app.post('/api/offline-sales', requireAdmin, async (req, res) => {
   }
 });
 
-// DELETE offline sale — ADMIN ONLY
+// DELETE offline sale — ADMIN ONLY (restores stock)
 app.delete('/api/offline-sales/:id', requireAdmin, async (req, res) => {
   try {
+    const sale = await OfflineSale.findById(req.params.id);
+    if (!sale) return res.status(404).json({ error: 'Sale not found' });
+    // Restore stock
+    const product = await Product.findOne({ itemCode: sale.itemCode });
+    if (product) {
+      product.stock += sale.qty;
+      await product.save();
+    }
     await OfflineSale.findByIdAndDelete(req.params.id);
     res.json({ ok: true });
   } catch (err) {

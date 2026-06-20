@@ -2520,11 +2520,12 @@
           <div class="ol-form">
             <h4>➕ Record a New Offline Sale</h4>
             <div class="ol-form-grid">
-              <div>
+              <div style="position:relative">
                 <label>Item Code *</label>
-                <select id="olItemCode" style="width:100%;padding:11px 14px;border:2px solid #d4b483;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:var(--cream);transition:border-color .2s;color:var(--text-dark);-webkit-appearance:none" onchange="olShowItemName()">
-                  <option value="">Select item code…</option>
-                </select>
+                <input type="text" id="olItemCodeInput" placeholder="Type code or name to search…" autocomplete="off"
+                  oninput="olFilterCodes()" onfocus="olFilterCodes()" onblur="olHideSugg()"
+                  style="width:100%;padding:11px 14px;border:2px solid #d4b483;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:var(--cream);transition:border-color .2s;color:var(--text-dark)">
+                <div id="olItemSuggestions" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:2px solid #d4b483;border-top:none;border-radius:0 0 10px 10px;max-height:220px;overflow-y:auto;z-index:9999;display:none;box-shadow:0 6px 20px rgba(92,58,30,.18)"></div>
                 <div id="olItemNameDisplay" style="margin-top:5px;font-size:.82rem;color:var(--bark);font-weight:600;min-height:16px"></div>
               </div>
               <div>
@@ -3532,30 +3533,45 @@ Total: ₹${order.total}`;
     }
 
     // ─── OFFLINE SALES ────────────────────────────────────────────────────────
-    function populateOlItemCodes() {
-      const sel = document.getElementById('olItemCode');
-      if (!sel) return;
-      const current = sel.value;
-      sel.innerHTML = '<option value="">Select item code…</option>';
-      allProducts.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.itemCode || '';
-        opt.textContent = (p.itemCode || '') + ' — ' + p.name;
-        sel.appendChild(opt);
-      });
-      if (current) sel.value = current;
+    // live-search autocomplete for item code
+    function olFilterCodes() {
+      const inp = document.getElementById('olItemCodeInput');
+      const sugg = document.getElementById('olItemSuggestions');
+      if (!inp || !sugg) return;
+      const q = inp.value.toLowerCase().trim();
+      const matches = q
+        ? allProducts.filter(p =>
+            (p.itemCode || '').toLowerCase().includes(q) ||
+            p.name.toLowerCase().includes(q))
+        : allProducts;
+      if (!matches.length) { sugg.style.display = 'none'; return; }
+      sugg.innerHTML = matches.map(p =>
+        `<div style="padding:9px 14px;cursor:pointer;border-bottom:1px solid #f0e0c8;font-size:.9rem"
+              onmousedown="olSelectCode(${JSON.stringify(p.itemCode||'')},${JSON.stringify(p.name)})"
+              onmouseover="this.style.background='#fdf3e3'"
+              onmouseout="this.style.background=''"
+         ><strong style="font-family:monospace;color:var(--bark);background:#f2e6d9;padding:1px 6px;border-radius:3px">${escHtml(p.itemCode||'')}</strong>&nbsp;— ${escHtml(p.name)}</div>`
+      ).join('');
+      sugg.style.display = 'block';
     }
 
-    function olShowItemName() {
-      const sel = document.getElementById('olItemCode');
+    function olSelectCode(code, name) {
+      const inp  = document.getElementById('olItemCodeInput');
       const disp = document.getElementById('olItemNameDisplay');
-      if (!sel || !disp) return;
-      const p = allProducts.find(x => x.itemCode === sel.value);
-      disp.textContent = p ? p.name : '';
+      const sugg = document.getElementById('olItemSuggestions');
+      if (inp)  inp.value = code;
+      if (disp) disp.textContent = name;
+      if (sugg) sugg.style.display = 'none';
+    }
+
+    function olHideSugg() {
+      setTimeout(() => {
+        const sugg = document.getElementById('olItemSuggestions');
+        if (sugg) sugg.style.display = 'none';
+      }, 180);
     }
 
     async function loadOfflineSales() {
-      populateOlItemCodes();
       const wrap = document.getElementById('offlineSalesTableWrap');
       wrap.innerHTML = '<div class="loading-spinner">⏳ Loading…</div>';
       try {
@@ -3590,7 +3606,7 @@ Total: ₹${order.total}`;
     }
 
     async function saveOfflineSale() {
-      const itemCode = document.getElementById('olItemCode').value.trim();
+      const itemCode = (document.getElementById('olItemCodeInput').value || '').trim().toUpperCase();
       const date = document.getElementById('olDate').value;
       const qty = document.getElementById('olQty').value;
       const amount = document.getElementById('olAmount').value;
@@ -3602,7 +3618,7 @@ Total: ₹${order.total}`;
         const res = await api.adminPost('/api/offline-sales', { itemCode, qty, amount, note, date });
         if (res.error) { showToast('❌ ' + res.error); btn.disabled = false; btn.textContent = '💾 Save Sale'; return; }
         showToast('✅ Sale recorded!');
-        document.getElementById('olItemCode').value = '';
+        document.getElementById('olItemCodeInput').value = '';
         document.getElementById('olItemNameDisplay').textContent = '';
         document.getElementById('olQty').value = '';
         document.getElementById('olAmount').value = '';
