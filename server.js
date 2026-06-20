@@ -232,7 +232,7 @@ app.get('/api/products/:id/image/:index', async (req, res) => {
 // POST create product — ADMIN ONLY
 app.post('/api/products', requireAdmin, async (req, res) => {
   try {
-    const { name, price, oldPrice, category, stock, desc, emoji, itemCode, images } = req.body;
+    const { name, price, oldPrice, category, stock, desc, emoji, itemCode, images, colors } = req.body;
 
     if (!name || !price || !category || !desc || !itemCode) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -258,6 +258,7 @@ app.post('/api/products', requireAdmin, async (req, res) => {
       emoji: emoji || '🧵',
       itemCode: cleanedItemCode,
       images: imageUrls,
+      colors: Array.isArray(colors) ? colors : [],
       createdAt: new Date().toISOString()
     });
 
@@ -271,7 +272,7 @@ app.post('/api/products', requireAdmin, async (req, res) => {
 // PUT update product — ADMIN ONLY
 app.put('/api/products/:id', requireAdmin, async (req, res) => {
   try {
-    const { name, price, oldPrice, category, stock, desc, emoji, keepImages, itemCode, newImages } = req.body;
+    const { name, price, oldPrice, category, stock, desc, emoji, keepImages, itemCode, newImages, colors } = req.body;
 
     const product = await Product.findOne({ id: req.params.id });
     if (!product) return res.status(404).json({ error: 'Not found' });
@@ -311,6 +312,7 @@ app.put('/api/products/:id', requireAdmin, async (req, res) => {
     if (stock !== undefined) product.stock = Number(stock);
     if (desc) product.desc = desc;
     if (emoji) product.emoji = emoji;
+    if (colors !== undefined) product.colors = Array.isArray(colors) ? colors : [];
     product.images = [...resolvedExistingImages, ...addedImages];
     product.updatedAt = new Date().toISOString();
 

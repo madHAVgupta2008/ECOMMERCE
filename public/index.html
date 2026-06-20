@@ -2300,6 +2300,64 @@
       .ol-form-grid { grid-template-columns: 1fr; }
       .ledger-form-grid { grid-template-columns: 1fr; }
     }
+
+    /* ── COLOUR CHIPS ──────────────────────────────────────────── */
+    .color-picker-row {
+      margin-bottom: 18px;
+    }
+    .color-picker-label {
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--bark);
+      margin-bottom: 10px;
+      display: block;
+    }
+    .color-chips-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .color-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 50px;
+      border: 2px solid #d4b483;
+      background: #fff;
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--bark);
+      cursor: pointer;
+      transition: all .2s;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    .color-chip:hover {
+      border-color: var(--saffron);
+      background: #fff8f0;
+    }
+    .color-chip.selected {
+      border-color: var(--saffron);
+      background: linear-gradient(135deg, var(--saffron), var(--deep-red));
+      color: #fff;
+      box-shadow: 0 3px 12px rgba(232,96,28,.35);
+      transform: scale(1.04);
+    }
+    .color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0,0,0,.15);
+      flex-shrink: 0;
+    }
+    .pv-color-required {
+      font-size: .8rem;
+      color: var(--deep-red);
+      font-weight: 600;
+      margin-top: 6px;
+      display: none;
+    }
   </style>
 </head>
 
@@ -2473,6 +2531,10 @@
                   placeholder="e.g. GZR-01"></div>
               <div class="form-row full"><label>Description *</label><textarea id="pDesc"
                   placeholder="Describe the materials, design, occasion…"></textarea></div>
+              <div class="form-row full">
+                <label>Available Colours <small style="font-weight:400;color:#999">(optional — comma-separated, e.g. Red, Gold, Orange)</small></label>
+                <input type="text" id="pColors" placeholder="e.g. Red, Gold, Orange, Maroon">
+              </div>
               <div class="form-row full">
                 <label>Product Photos</label>
                 <div class="upload-area" onclick="document.getElementById('fileInput').click()">
@@ -2660,6 +2722,9 @@
       <div class="pv-name" id="pvName"></div>
       <div class="pv-desc" id="pvDesc"></div>
       <div class="pv-price" id="pvPrice"></div>
+      <!-- colour picker injected here by JS if product has colors -->
+      <div id="pvColorPicker"></div>
+      <div class="pv-color-required" id="pvColorRequired">⚠️ Please select a colour first</div>
       <button class="add-cart-btn" id="pvAddBtn" style="max-width:400px"></button>
     </div>
   </div>
@@ -2697,6 +2762,21 @@
     let newFiles = [];       // File objects for upload
     let keepImages = [];     // URLs to keep on edit
     let editingId = null;
+    let pvSelectedColor = null;  // currently selected colour in the quick-view popup
+
+    // ── COLOUR DOT HELPER ──────────────────────────────────────────────────────
+    const COLOR_MAP = {
+      red:'#e74c3c', orange:'#e8601c', gold:'#d4a017', yellow:'#f1c40f',
+      green:'#27ae60', blue:'#2980b9', pink:'#e91e8c', maroon:'#9b1d20',
+      purple:'#8e44ad', white:'#f5f5f5', black:'#222', silver:'#aaa',
+      cream:'#fdf6ec', saffron:'#e8601c', brown:'#5c3a1e', grey:'#888',
+      gray:'#888', navy:'#1a237e', turquoise:'#1abc9c', magenta:'#9b59b6'
+    };
+    function colorDot(name) {
+      const key = name.toLowerCase().trim();
+      const bg = COLOR_MAP[key] || '#ccc';
+      return `<span class="color-dot" style="background:${bg}"></span>`;
+    }
 
     // ─── API ───────────────────────────────────────────────────────────────────
     function getAdminToken() { return sessionStorage.getItem('rr_admin_token') || ''; }
@@ -2878,6 +2958,7 @@
     function showProductPopup(id) {
       const p = allProducts.find(x => x.id === id);
       if (!p) return;
+      pvSelectedColor = null;  // reset selection
       const sl = p.stock === 0 ? 'out-stock' : p.stock <= 5 ? 'low-stock' : 'in-stock';
       const st = p.stock === 0 ? 'Out of Stock' : p.stock <= 5 ? `Only ${p.stock} left` : 'In Stock';
       document.getElementById('pvImg').innerHTML = p.images && p.images[0]
@@ -2888,6 +2969,23 @@
       document.getElementById('pvName').textContent = p.name;
       document.getElementById('pvDesc').textContent = p.desc;
       document.getElementById('pvPrice').innerHTML = `₹${p.price}${p.oldPrice ? `<small>₹${p.oldPrice}</small>` : ''}`;
+
+      // ── Colour picker ──────────────────────────────────────────────────────
+      const pickerWrap = document.getElementById('pvColorPicker');
+      const colors = Array.isArray(p.colors) ? p.colors.filter(c => c.trim()) : [];
+      if (colors.length) {
+        pickerWrap.innerHTML = `
+          <div class="color-picker-row">
+            <span class="color-picker-label">🎨 Choose a Colour</span>
+            <div class="color-chips-wrap" id="pvColorChips">
+              ${colors.map(c => `<span class="color-chip" onclick="selectPvColor(this,'${escHtml(c)}')">${colorDot(c)}${escHtml(c)}</span>`).join('')}
+            </div>
+          </div>`;
+      } else {
+        pickerWrap.innerHTML = '';
+      }
+      document.getElementById('pvColorRequired').style.display = 'none';
+      // ── Add to Cart button ─────────────────────────────────────────────────
       const btn = document.getElementById('pvAddBtn');
       if (p.stock === 0) {
         btn.textContent = '❌ Out of Stock';
@@ -2896,10 +2994,26 @@
       } else {
         btn.textContent = '🛒 Add to Cart';
         btn.disabled = false;
-        btn.onclick = () => { addToCart(p.id); closeProductPopup(); };
+        btn.onclick = () => pvAddToCart(p.id, colors);
       }
       document.getElementById('pvOverlay').classList.add('open');
       document.body.style.overflow = 'hidden';
+    }
+
+    function selectPvColor(el, colorName) {
+      document.querySelectorAll('#pvColorChips .color-chip').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      pvSelectedColor = colorName;
+      document.getElementById('pvColorRequired').style.display = 'none';
+    }
+
+    function pvAddToCart(productId, colors) {
+      if (colors.length && !pvSelectedColor) {
+        document.getElementById('pvColorRequired').style.display = 'block';
+        return;
+      }
+      addToCart(productId, pvSelectedColor);
+      closeProductPopup();
     }
 
     function closeProductPopup() {
@@ -2912,16 +3026,20 @@
     }
 
     // ─── CART ──────────────────────────────────────────────────────────────────
-    function addToCart(id) {
+    function addToCart(id, color) {
       const p = allProducts.find(x => x.id === id);
       if (!p || p.stock === 0) return;
-      const existing = cart.find(i => i.id === id);
+      // Use color+id as unique cart key so different colours are separate line items
+      const cartKey = id + (color ? '::' + color : '');
+      const existing = cart.find(i => i.cartKey === cartKey);
       if (existing) {
         if (existing.qty >= p.stock) { showToast('⚠️ Max stock reached!'); return; }
         existing.qty++;
-      } else { cart.push({ id, qty: 1 }); }
+      } else {
+        cart.push({ cartKey, id, qty: 1, color: color || null });
+      }
       updateCartCount();
-      showToast(`✅ ${p.name} added!`);
+      showToast(`✅ ${p.name}${color ? ' (' + color + ')' : ''} added!`);
       renderCartPanel();
     }
     function updateCartCount() { document.getElementById('cartCount').textContent = cart.reduce((s, i) => s + i.qty, 0); }
@@ -2939,17 +3057,21 @@
       container.innerHTML = cart.map(item => {
         const p = allProducts.find(x => x.id === item.id); if (!p) return '';
         const img = p.images && p.images[0] ? `<img src="${p.images[0]}" alt="">` : `<span style="font-size:2rem">${p.emoji || '🪢'}</span>`;
+        const colorTag = item.color
+          ? `<div style="font-size:.75rem;color:var(--bark);font-weight:700;margin-top:3px;display:flex;align-items:center;gap:4px">${colorDot(item.color)}<span>${escHtml(item.color)}</span></div>`
+          : '';
         return `<div class="cart-item">
       <div class="cart-item-img">${img}</div>
       <div class="cart-item-info">
         <div class="cart-item-name">${p.name}</div>
+        ${colorTag}
         <div class="cart-item-price">₹${p.price * item.qty}</div>
         <div class="qty-control">
-          <button class="qty-btn" onclick="changeQty('${p.id}',-1)">−</button>
+          <button class="qty-btn" onclick="changeQty('${item.cartKey}',-1)">−</button>
           <span class="qty-num">${item.qty}</span>
-          <button class="qty-btn" onclick="changeQty('${p.id}',1)">+</button>
+          <button class="qty-btn" onclick="changeQty('${item.cartKey}',1)">+</button>
         </div>
-        <span class="remove-item" onclick="removeFromCart('${p.id}')">🗑 Remove</span>
+        <span class="remove-item" onclick="removeFromCart('${item.cartKey}')">🗑 Remove</span>
       </div>
     </div>`;
       }).join('');
@@ -2958,19 +3080,23 @@
     <button class="checkout-btn" onclick="openCheckout()">🎁 Place Order</button>`;
     }
 
-    function changeQty(id, d) {
-      const item = cart.find(i => i.id === id);
-      const p = allProducts.find(x => x.id === id);
-      if (!item) return;
+    function changeQty(cartKey, d) {
+      const item = cart.find(i => i.cartKey === cartKey);
+      const p = allProducts.find(x => x.id === (item && item.id));
+      if (!item || !p) return;
       item.qty = Math.max(1, Math.min(item.qty + d, p.stock));
       renderCartPanel(); updateCartCount();
     }
-    function removeFromCart(id) { cart = cart.filter(i => i.id !== id); updateCartCount(); renderCartPanel(); }
+    function removeFromCart(cartKey) { cart = cart.filter(i => i.cartKey !== cartKey); updateCartCount(); renderCartPanel(); }
 
     // ─── CHECKOUT ──────────────────────────────────────────────────────────────
     function openCheckout() {
       const total = cart.reduce((s, i) => { const p = allProducts.find(x => x.id === i.id); return s + (p ? p.price * i.qty : 0); }, 0);
-      const summary = cart.map(i => { const p = allProducts.find(x => x.id === i.id); return `<div class="order-summary-item"><span>${p.name} ×${i.qty}</span><span>₹${p.price * i.qty}</span></div>`; }).join('');
+      const summary = cart.map(i => {
+        const p = allProducts.find(x => x.id === i.id);
+        const colorNote = i.color ? ` <span style="font-size:.75rem;background:#fdf3e3;padding:1px 6px;border-radius:4px;color:var(--bark);font-weight:700">${escHtml(i.color)}</span>` : '';
+        return `<div class="order-summary-item"><span>${p.name} ×${i.qty}${colorNote}</span><span>₹${p.price * i.qty}</span></div>`;
+      }).join('');
       document.getElementById('checkoutModalContent').innerHTML = `
     <div class="modal-handle"></div>
     <h2>🎁 Place Your Order</h2>
@@ -3016,7 +3142,8 @@
           name: p.name,
           price: p.price,
           qty: i.qty,
-          itemCode: p.itemCode || ''
+          itemCode: p.itemCode || '',
+          color: i.color || ''
         };
       });
 
@@ -3041,7 +3168,7 @@
 
         // WhatsApp Message
         const orderItems = items.map(i =>
-          `${i.name} [${i.itemCode || 'N/A'}] x ${i.qty}`
+          `${i.name} [${i.itemCode || 'N/A'}]${i.color ? ' (Colour: ' + i.color + ')' : ''} x ${i.qty}`
         ).join('\n');
 
         const whatsappMessage =
@@ -3294,6 +3421,7 @@ Total: ₹${order.total}`;
       document.getElementById('pStock').value = p.stock;
       document.getElementById('pItemCode').value = p.itemCode || '';
       document.getElementById('pDesc').value = p.desc;
+      document.getElementById('pColors').value = Array.isArray(p.colors) ? p.colors.join(', ') : '';
       newFiles = []; keepImages = [...(p.images || [])];
       renderUploadPreview();
       renderExistingImages();
@@ -3303,7 +3431,7 @@ Total: ₹${order.total}`;
     function resetForm() {
       document.getElementById('formTitle').textContent = 'Add New Rakhi';
       document.getElementById('editProductId').value = '';
-      ['pName', 'pPrice', 'pOldPrice', 'pCategory', 'pStock', 'pItemCode', 'pDesc'].forEach(id => document.getElementById(id).value = '');
+      ['pName', 'pPrice', 'pOldPrice', 'pCategory', 'pStock', 'pItemCode', 'pDesc', 'pColors'].forEach(id => document.getElementById(id).value = '');
       newFiles = []; keepImages = []; editingId = null;
       renderUploadPreview(); renderExistingImages();
       populateCategoryDropdown();
@@ -3407,6 +3535,10 @@ Total: ₹${order.total}`;
           desc,
           emoji: '🪢',
           itemCode,
+          colors: document.getElementById('pColors').value
+            .split(',')
+            .map(c => c.trim())
+            .filter(Boolean),
         };
 
         if (editingId) {

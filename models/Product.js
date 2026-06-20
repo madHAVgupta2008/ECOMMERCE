@@ -11,6 +11,7 @@ const ProductSchema = new mongoose.Schema({
   desc: { type: String, default: '' },
   emoji: { type: String, default: '🧵' },
   images: { type: [String], default: [] },
+  colors: { type: [String], default: [] },
   createdAt: { type: String, default: () => new Date().toISOString() },
   updatedAt: { type: String, default: null }
 });
