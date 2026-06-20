@@ -2435,6 +2435,16 @@
             <h2>My Products</h2>
             <button class="btn-add" onclick="showAdminSection('add-product')">➕ Add New</button>
           </div>
+          <div style="margin-bottom:20px">
+            <input
+              id="adminProductSearch"
+              type="text"
+              placeholder="🔍 Search by name, item code or category…"
+              oninput="filterAdminProducts()"
+              style="width:100%;max-width:480px;padding:11px 18px;border:2px solid #d4b483;border-radius:50px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:#fff;transition:border-color .2s;color:var(--text-dark)"
+              onfocus="this.style.borderColor='var(--saffron)'"
+              onblur="this.style.borderColor='#d4b483'">
+          </div>
           <div class="admin-products-grid" id="adminProductsGrid"></div>
         </div>
         <!-- ADD/EDIT PRODUCT -->
@@ -3168,16 +3178,32 @@ Total: ₹${order.total}`;
 
     async function loadAdminProducts() {
       try {
-        allProducts = await api.get('/api/products'); // public endpoint, no auth needed
-        const grid = document.getElementById('adminProductsGrid');
-        if (!allProducts.length) {
-          grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="big-icon">🪢</div><h3>No products yet</h3><p>Add your first rakhi!</p></div>`;
-          return;
-        }
-        grid.innerHTML = allProducts.map(p => {
-          const imgHtml = p.images && p.images[0] ? `<img src="${p.images[0]}" alt="">` : `<span>${p.emoji || '🪢'}</span>`;
-          const sc = p.stock === 0 ? '#e74c3c' : p.stock <= 5 ? '#e67e22' : '#27ae60';
-          return `<div class="admin-product-card">
+        allProducts = await api.get('/api/products');
+        renderAdminProducts(allProducts);
+      } catch (e) { }
+    }
+
+    function filterAdminProducts() {
+      const q = (document.getElementById('adminProductSearch').value || '').toLowerCase().trim();
+      if (!q) { renderAdminProducts(allProducts); return; }
+      const filtered = allProducts.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.itemCode || '').toLowerCase().includes(q) ||
+        (p.category || '').toLowerCase().includes(q)
+      );
+      renderAdminProducts(filtered);
+    }
+
+    function renderAdminProducts(list) {
+      const grid = document.getElementById('adminProductsGrid');
+      if (!list || !list.length) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="big-icon">🪢</div><h3>${allProducts.length ? 'No products match your search' : 'No products yet'}</h3><p>${allProducts.length ? 'Try a different keyword.' : 'Add your first rakhi!'}</p></div>`;
+        return;
+      }
+      grid.innerHTML = list.map(p => {
+        const imgHtml = p.images && p.images[0] ? `<img src="${p.images[0]}" alt="">` : `<span>${p.emoji || '🪢'}</span>`;
+        const sc = p.stock === 0 ? '#e74c3c' : p.stock <= 5 ? '#e67e22' : '#27ae60';
+        return `<div class="admin-product-card">
         <div class="admin-product-img">${imgHtml}</div>
         <div class="admin-product-body">
           <div class="admin-product-name">${p.name}</div>
@@ -3194,8 +3220,7 @@ Total: ₹${order.total}`;
           </div>
         </div>
       </div>`;
-        }).join('');
-      } catch (e) { }
+      }).join('');
     }
 
     async function loadOrders() {
