@@ -2521,8 +2521,11 @@
             <h4>➕ Record a New Offline Sale</h4>
             <div class="ol-form-grid">
               <div>
-                <label>Item Name *</label>
-                <input type="text" id="olItemName" placeholder="e.g. Golden Zari Rakhi">
+                <label>Item Code *</label>
+                <select id="olItemCode" style="width:100%;padding:11px 14px;border:2px solid #d4b483;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:var(--cream);transition:border-color .2s;color:var(--text-dark);-webkit-appearance:none" onchange="olShowItemName()">
+                  <option value="">Select item code…</option>
+                </select>
+                <div id="olItemNameDisplay" style="margin-top:5px;font-size:.82rem;color:var(--bark);font-weight:600;min-height:16px"></div>
               </div>
               <div>
                 <label>Date *</label>
@@ -3529,7 +3532,30 @@ Total: ₹${order.total}`;
     }
 
     // ─── OFFLINE SALES ────────────────────────────────────────────────────────
+    function populateOlItemCodes() {
+      const sel = document.getElementById('olItemCode');
+      if (!sel) return;
+      const current = sel.value;
+      sel.innerHTML = '<option value="">Select item code…</option>';
+      allProducts.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.itemCode || '';
+        opt.textContent = (p.itemCode || '') + ' — ' + p.name;
+        sel.appendChild(opt);
+      });
+      if (current) sel.value = current;
+    }
+
+    function olShowItemName() {
+      const sel = document.getElementById('olItemCode');
+      const disp = document.getElementById('olItemNameDisplay');
+      if (!sel || !disp) return;
+      const p = allProducts.find(x => x.itemCode === sel.value);
+      disp.textContent = p ? p.name : '';
+    }
+
     async function loadOfflineSales() {
+      populateOlItemCodes();
       const wrap = document.getElementById('offlineSalesTableWrap');
       wrap.innerHTML = '<div class="loading-spinner">⏳ Loading…</div>';
       try {
@@ -3541,18 +3567,19 @@ Total: ₹${order.total}`;
         let totalQty = 0, totalAmt = 0;
         sales.forEach(s => { totalQty += s.qty; totalAmt += s.amount; });
         wrap.innerHTML = `<table class="sales-table">
-          <thead><tr><th>Date</th><th>Item Name</th><th>Qty</th><th>Amount (₹)</th><th>Note</th><th>Action</th></tr></thead>
+          <thead><tr><th>Date</th><th>Item Code</th><th>Item Name</th><th>Qty</th><th>Amount (₹)</th><th>Note</th><th>Action</th></tr></thead>
           <tbody>
             ${sales.map(s => `<tr>
               <td style="white-space:nowrap">${s.date}</td>
-              <td><strong>${escHtml(s.itemName)}</strong></td>
+              <td><strong style="font-family:monospace;background:#f2e6d9;padding:2px 7px;border-radius:4px">${escHtml(s.itemCode || '')}</strong></td>
+              <td>${escHtml(s.itemName || '')}</td>
               <td>${s.qty}</td>
               <td><strong>₹${s.amount.toLocaleString('en-IN')}</strong></td>
               <td style="font-size:.85rem;color:#7a5c3a">${escHtml(s.note || '—')}</td>
-              <td><button class="btn-delete" onclick="deleteOfflineSale('${s._id}')">🗑</button></td>
+              <td><button class="btn-delete" onclick="deleteOfflineSale('${s._id}')">&#128465;</button></td>
             </tr>`).join('')}
             <tr class="sales-total-row">
-              <td colspan="2"><strong>Total</strong></td>
+              <td colspan="3"><strong>Total</strong></td>
               <td><strong>${totalQty}</strong></td>
               <td><strong>₹${totalAmt.toLocaleString('en-IN')}</strong></td>
               <td colspan="2"></td>
@@ -3563,19 +3590,20 @@ Total: ₹${order.total}`;
     }
 
     async function saveOfflineSale() {
-      const itemName = document.getElementById('olItemName').value.trim();
+      const itemCode = document.getElementById('olItemCode').value.trim();
       const date = document.getElementById('olDate').value;
       const qty = document.getElementById('olQty').value;
       const amount = document.getElementById('olAmount').value;
       const note = document.getElementById('olNote').value.trim();
-      if (!itemName || !date || !qty || !amount) { showToast('⚠️ Fill all required fields'); return; }
+      if (!itemCode || !date || !qty || !amount) { showToast('⚠️ Fill all required fields'); return; }
       const btn = document.getElementById('olSaveBtn');
       btn.disabled = true; btn.textContent = '⏳ Saving…';
       try {
-        const res = await api.adminPost('/api/offline-sales', { itemName, qty, amount, note, date });
+        const res = await api.adminPost('/api/offline-sales', { itemCode, qty, amount, note, date });
         if (res.error) { showToast('❌ ' + res.error); btn.disabled = false; btn.textContent = '💾 Save Sale'; return; }
         showToast('✅ Sale recorded!');
-        document.getElementById('olItemName').value = '';
+        document.getElementById('olItemCode').value = '';
+        document.getElementById('olItemNameDisplay').textContent = '';
         document.getElementById('olQty').value = '';
         document.getElementById('olAmount').value = '';
         document.getElementById('olNote').value = '';

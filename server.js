@@ -534,17 +534,21 @@ app.post('/api/orders/track', async (req, res) => {
 // ── Stats API — ADMIN ONLY ─────────────────────────────────────────────────
 app.get('/api/stats', requireAdmin, async (req, res) => {
   try {
-    const [products, orders] = await Promise.all([
+    const [products, orders, offlineSales] = await Promise.all([
       Product.find(),
-      Order.find()
+      Order.find(),
+      OfflineSale.find()
     ]);
+
+    const onlineRevenue = orders
+      .filter(o => o.status === 'Delivered')
+      .reduce((s, o) => s + o.total, 0);
+    const offlineRevenue = offlineSales.reduce((s, o) => s + o.amount, 0);
 
     res.json({
       totalProducts: products.length,
       totalOrders: orders.length,
-      totalRevenue: orders
-        .filter(o => o.status === 'Delivered')
-        .reduce((s, o) => s + o.total, 0),
+      totalRevenue: onlineRevenue + offlineRevenue,
       lowStock: products.filter(p => p.stock > 0 && p.stock <= 5).length,
       outStock: products.filter(p => p.stock === 0).length,
       pendingOrders: orders.filter(o => ['New', 'Processing'].includes(o.status)).length,
@@ -588,11 +592,16 @@ app.get('/api/offline-sales', requireAdmin, async (req, res) => {
 // POST create offline sale — ADMIN ONLY
 app.post('/api/offline-sales', requireAdmin, async (req, res) => {
   try {
-    const { itemName, qty, amount, note, date } = req.body;
-    if (!itemName || !qty || !amount || !date)
+    const { itemCode, qty, amount, note, date } = req.body;
+    if (!itemCode || !qty || !amount || !date)
       return res.status(400).json({ error: 'Missing required fields' });
+    // Look up product name automatically from item code
+    const product = await Product.findOne({ itemCode: itemCode.trim().toUpperCase() });
+    if (!product)
+      return res.status(400).json({ error: `No product found with item code: ${itemCode.trim().toUpperCase()}` });
     const sale = await OfflineSale.create({
-      itemName: itemName.trim(),
+      itemCode: itemCode.trim().toUpperCase(),
+      itemName: product.name,
       qty: Number(qty),
       amount: Number(amount),
       note: (note || '').trim(),
