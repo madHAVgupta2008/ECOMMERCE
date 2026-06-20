@@ -8,6 +8,8 @@ const rateLimit = require('express-rate-limit');
 const Product = require('./models/Product');
 const Order = require('./models/Order');
 const Category = require('./models/Category');
+const OfflineSale = require('./models/OfflineSale');
+const CashEntry = require('./models/CashEntry');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -569,6 +571,89 @@ app.get('/mongo-test', requireAdmin, async (req, res) => {
     connected: mongoose.connection.readyState === 1,
     state: mongoose.connection.readyState
   });
+});
+
+// ── OFFLINE SALES API ─────────────────────────────────────────────────────
+
+// GET all offline sales — ADMIN ONLY
+app.get('/api/offline-sales', requireAdmin, async (req, res) => {
+  try {
+    const sales = await OfflineSale.find().sort({ date: -1, createdAt: -1 });
+    res.json(sales);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load offline sales' });
+  }
+});
+
+// POST create offline sale — ADMIN ONLY
+app.post('/api/offline-sales', requireAdmin, async (req, res) => {
+  try {
+    const { itemName, qty, amount, note, date } = req.body;
+    if (!itemName || !qty || !amount || !date)
+      return res.status(400).json({ error: 'Missing required fields' });
+    const sale = await OfflineSale.create({
+      itemName: itemName.trim(),
+      qty: Number(qty),
+      amount: Number(amount),
+      note: (note || '').trim(),
+      date
+    });
+    res.json(sale);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to record sale' });
+  }
+});
+
+// DELETE offline sale — ADMIN ONLY
+app.delete('/api/offline-sales/:id', requireAdmin, async (req, res) => {
+  try {
+    await OfflineSale.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete sale' });
+  }
+});
+
+// ── CASH LEDGER API ───────────────────────────────────────────────────────
+
+// GET all cash entries — ADMIN ONLY
+app.get('/api/cash-entries', requireAdmin, async (req, res) => {
+  try {
+    const entries = await CashEntry.find().sort({ date: -1, createdAt: -1 });
+    res.json(entries);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load cash entries' });
+  }
+});
+
+// POST create cash entry — ADMIN ONLY
+app.post('/api/cash-entries', requireAdmin, async (req, res) => {
+  try {
+    const { type, amount, description, date } = req.body;
+    if (!type || !amount || !date)
+      return res.status(400).json({ error: 'Missing required fields' });
+    if (!['income', 'expense'].includes(type))
+      return res.status(400).json({ error: 'Type must be income or expense' });
+    const entry = await CashEntry.create({
+      type,
+      amount: Number(amount),
+      description: (description || '').trim(),
+      date
+    });
+    res.json(entry);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to record entry' });
+  }
+});
+
+// DELETE cash entry — ADMIN ONLY
+app.delete('/api/cash-entries/:id', requireAdmin, async (req, res) => {
+  try {
+    await CashEntry.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete entry' });
+  }
 });
 
 // Serve frontend for all other routes

@@ -2144,6 +2144,162 @@
         border-radius: 24px 24px 0 0;
       }
     }
+    /* OFFLINE SALES */
+    .ol-form {
+      background: #fff;
+      border-radius: 16px;
+      padding: 26px 28px;
+      border: 1px solid #eddcc0;
+      max-width: 620px;
+      margin-bottom: 28px;
+    }
+    .ol-form h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      color: var(--bark);
+      margin-bottom: 18px;
+    }
+    .ol-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .ol-form-grid .full { grid-column: 1 / -1; }
+    .ol-form-grid input, .ol-form-grid select {
+      width: 100%;
+      padding: 11px 14px;
+      border: 2px solid #d4b483;
+      border-radius: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-size: .95rem;
+      outline: none;
+      background: var(--cream);
+      transition: border-color .2s;
+      color: var(--text-dark);
+      -webkit-appearance: none;
+    }
+    .ol-form-grid input:focus, .ol-form-grid select:focus { border-color: var(--saffron); }
+    .ol-form label { display: block; font-weight: 700; font-size: .85rem; margin-bottom: 5px; color: var(--bark); }
+
+    .sales-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px var(--shadow);
+    }
+    .sales-table th {
+      background: var(--bark);
+      color: var(--gold-light);
+      padding: 13px 16px;
+      text-align: left;
+      font-size: .84rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+    .sales-table td {
+      padding: 13px 16px;
+      border-bottom: 1px solid #eddcc0;
+      font-size: .9rem;
+      vertical-align: middle;
+    }
+    .sales-table tr:last-child td { border-bottom: none; }
+    .sales-table tr:hover td { background: #fdf3e3; }
+    .sales-total-row td { font-weight: 700; background: #fdf3e3 !important; color: var(--bark); }
+
+    /* CASH LEDGER */
+    .ledger-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .ledger-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      border: 1px solid #eddcc0;
+      box-shadow: 0 2px 12px var(--shadow);
+      text-align: center;
+    }
+    .ledger-card .lc-icon { font-size: 1.8rem; margin-bottom: 8px; }
+    .ledger-card .lc-val { font-size: 1.6rem; font-weight: 700; }
+    .ledger-card .lc-label { font-size: .8rem; color: #7a5c3a; font-weight: 600; margin-top: 4px; }
+    .lc-income .lc-val { color: var(--leaf); }
+    .lc-expense .lc-val { color: var(--deep-red); }
+    .lc-profit .lc-val { color: var(--bark); }
+    .lc-profit.loss .lc-val { color: #c0392b; }
+
+    .ledger-form {
+      background: #fff;
+      border-radius: 16px;
+      padding: 26px 28px;
+      border: 1px solid #eddcc0;
+      max-width: 620px;
+      margin-bottom: 28px;
+    }
+    .ledger-form h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      color: var(--bark);
+      margin-bottom: 18px;
+    }
+    .ledger-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .ledger-form-grid .full { grid-column: 1 / -1; }
+    .ledger-form-grid input, .ledger-form-grid select {
+      width: 100%;
+      padding: 11px 14px;
+      border: 2px solid #d4b483;
+      border-radius: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-size: .95rem;
+      outline: none;
+      background: var(--cream);
+      transition: border-color .2s;
+      color: var(--text-dark);
+      -webkit-appearance: none;
+    }
+    .ledger-form-grid input:focus, .ledger-form-grid select:focus { border-color: var(--saffron); }
+    .ledger-form label { display: block; font-weight: 700; font-size: .85rem; margin-bottom: 5px; color: var(--bark); }
+
+    .ledger-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px var(--shadow);
+    }
+    .ledger-table th {
+      background: var(--bark);
+      color: var(--gold-light);
+      padding: 13px 16px;
+      text-align: left;
+      font-size: .84rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+    .ledger-table td {
+      padding: 13px 16px;
+      border-bottom: 1px solid #eddcc0;
+      font-size: .9rem;
+      vertical-align: middle;
+    }
+    .ledger-table tr:last-child td { border-bottom: none; }
+    .ledger-table tr:hover td { background: #fdf3e3; }
+    .type-income { color: var(--leaf); font-weight: 700; }
+    .type-expense { color: var(--deep-red); font-weight: 700; }
+
+    @media(max-width:700px) {
+      .ledger-summary { grid-template-columns: 1fr; }
+      .ol-form-grid { grid-template-columns: 1fr; }
+      .ledger-form-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 
@@ -2244,6 +2400,8 @@
       <div class="mob-item" onclick="showAdminSection('add-product',this)">➕ Add</div>
       <div class="mob-item" onclick="showAdminSection('categories',this)">🏷️ Categories</div>
       <div class="mob-item" onclick="showAdminSection('orders',this)">📦 Orders</div>
+      <div class="mob-item" onclick="showAdminSection('offline-sales',this)">🏪 Offline Sales</div>
+      <div class="mob-item" onclick="showAdminSection('cash-ledger',this)">📒 Ledger</div>
     </div>
     <div class="admin-layout">
       <div class="admin-sidebar">
@@ -2255,6 +2413,8 @@
         <div class="sidebar-item" id="sb-categories" onclick="showAdminSection('categories',this)">🏷️ Categories</div>
         <div class="sidebar-item" id="sb-orders" onclick="showAdminSection('orders',this)">📦 Orders <span
             class="new-orders-dot" id="newOrdersDot" style="display:none">0</span></div>
+        <div class="sidebar-item" id="sb-offline-sales" onclick="showAdminSection('offline-sales',this)">🏪 Offline Sales</div>
+        <div class="sidebar-item" id="sb-cash-ledger" onclick="showAdminSection('cash-ledger',this)">📒 Cash Ledger</div>
         <div class="sidebar-item" onclick="adminLogout()">🚪 Logout</div>
       </div>
       <div class="admin-content">
@@ -2347,6 +2507,108 @@
             <h2>All Orders</h2><button class="btn-add" onclick="loadOrders()">🔄 Refresh</button>
           </div>
           <div style="overflow-x:auto" id="ordersTableWrap"></div>
+        </div>
+
+        <!-- OFFLINE SALES -->
+        <div class="admin-section" id="section-offline-sales">
+          <div class="section-header">
+            <h2>🏪 Offline Sales</h2>
+            <button class="btn-add" onclick="loadOfflineSales()">🔄 Refresh</button>
+          </div>
+          <p style="color:#7a5c3a;font-size:.92rem;margin-bottom:20px;max-width:580px">Record items sold in person (offline). Each entry tracks the item name, quantity, and amount collected.</p>
+
+          <div class="ol-form">
+            <h4>➕ Record a New Offline Sale</h4>
+            <div class="ol-form-grid">
+              <div>
+                <label>Item Name *</label>
+                <input type="text" id="olItemName" placeholder="e.g. Golden Zari Rakhi">
+              </div>
+              <div>
+                <label>Date *</label>
+                <input type="date" id="olDate">
+              </div>
+              <div>
+                <label>Quantity *</label>
+                <input type="number" id="olQty" placeholder="e.g. 3" min="1" onwheel="this.blur()">
+              </div>
+              <div>
+                <label>Amount Collected (₹) *</label>
+                <input type="number" id="olAmount" placeholder="e.g. 450" min="0" onwheel="this.blur()">
+              </div>
+              <div class="full">
+                <label>Note <small style="font-weight:400;color:#999">(optional)</small></label>
+                <input type="text" id="olNote" placeholder="e.g. Cash payment, festival sale">
+              </div>
+            </div>
+            <div style="margin-top:18px">
+              <button class="btn-primary" id="olSaveBtn" onclick="saveOfflineSale()">💾 Save Sale</button>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto" id="offlineSalesTableWrap">
+            <div class="loading-spinner">⏳ Loading sales…</div>
+          </div>
+        </div>
+
+        <!-- CASH LEDGER -->
+        <div class="admin-section" id="section-cash-ledger">
+          <div class="section-header">
+            <h2>📒 Cash Ledger</h2>
+            <button class="btn-add" onclick="loadCashLedger()">🔄 Refresh</button>
+          </div>
+          <p style="color:#7a5c3a;font-size:.92rem;margin-bottom:20px;max-width:580px">Record daily incoming and outgoing money. The summary below shows your total income, expenses, and net profit or loss.</p>
+
+          <div class="ledger-summary" id="ledgerSummary">
+            <div class="ledger-card lc-income">
+              <div class="lc-icon">📈</div>
+              <div class="lc-val" id="lc-total-income">₹0</div>
+              <div class="lc-label">Total Income</div>
+            </div>
+            <div class="ledger-card lc-expense">
+              <div class="lc-icon">📉</div>
+              <div class="lc-val" id="lc-total-expense">₹0</div>
+              <div class="lc-label">Total Expense</div>
+            </div>
+            <div class="ledger-card lc-profit" id="ledger-profit-card">
+              <div class="lc-icon">💰</div>
+              <div class="lc-val" id="lc-net-pl">₹0</div>
+              <div class="lc-label" id="lc-pl-label">Net Profit</div>
+            </div>
+          </div>
+
+          <div class="ledger-form">
+            <h4>➕ Add Entry</h4>
+            <div class="ledger-form-grid">
+              <div>
+                <label>Type *</label>
+                <select id="leType">
+                  <option value="">Select type</option>
+                  <option value="income">📈 Income</option>
+                  <option value="expense">📉 Expense</option>
+                </select>
+              </div>
+              <div>
+                <label>Date *</label>
+                <input type="date" id="leDate">
+              </div>
+              <div>
+                <label>Amount (₹) *</label>
+                <input type="number" id="leAmount" placeholder="e.g. 1200" min="0" onwheel="this.blur()">
+              </div>
+              <div>
+                <label>Description <small style="font-weight:400;color:#999">(optional)</small></label>
+                <input type="text" id="leDesc" placeholder="e.g. Supplier payment, rent">
+              </div>
+            </div>
+            <div style="margin-top:18px">
+              <button class="btn-primary" id="leSaveBtn" onclick="saveCashEntry()">💾 Add Entry</button>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto" id="cashLedgerTableWrap">
+            <div class="loading-spinner">⏳ Loading entries…</div>
+          </div>
         </div>
       </div>
     </div>
@@ -2868,6 +3130,8 @@ Total: ₹${order.total}`;
       if (name === 'orders') loadOrders();
       if (name === 'categories') loadAdminCategories();
       if (name === 'add-product') { resetForm(); populateCategoryDropdown(); }
+      if (name === 'offline-sales') loadOfflineSales();
+      if (name === 'cash-ledger') loadCashLedger();
     }
 
     async function loadStats() {
@@ -3262,6 +3526,146 @@ Total: ₹${order.total}`;
         showToast('❌ Failed to delete order');
 
       }
+    }
+
+    // ─── OFFLINE SALES ────────────────────────────────────────────────────────
+    async function loadOfflineSales() {
+      const wrap = document.getElementById('offlineSalesTableWrap');
+      wrap.innerHTML = '<div class="loading-spinner">⏳ Loading…</div>';
+      try {
+        const sales = await api.adminGet('/api/offline-sales');
+        if (!Array.isArray(sales) || !sales.length) {
+          wrap.innerHTML = `<div class="empty-state"><div class="big-icon">🏪</div><h3>No offline sales yet</h3><p>Record your first sale above.</p></div>`;
+          return;
+        }
+        let totalQty = 0, totalAmt = 0;
+        sales.forEach(s => { totalQty += s.qty; totalAmt += s.amount; });
+        wrap.innerHTML = `<table class="sales-table">
+          <thead><tr><th>Date</th><th>Item Name</th><th>Qty</th><th>Amount (₹)</th><th>Note</th><th>Action</th></tr></thead>
+          <tbody>
+            ${sales.map(s => `<tr>
+              <td style="white-space:nowrap">${s.date}</td>
+              <td><strong>${escHtml(s.itemName)}</strong></td>
+              <td>${s.qty}</td>
+              <td><strong>₹${s.amount.toLocaleString('en-IN')}</strong></td>
+              <td style="font-size:.85rem;color:#7a5c3a">${escHtml(s.note || '—')}</td>
+              <td><button class="btn-delete" onclick="deleteOfflineSale('${s._id}')">🗑</button></td>
+            </tr>`).join('')}
+            <tr class="sales-total-row">
+              <td colspan="2"><strong>Total</strong></td>
+              <td><strong>${totalQty}</strong></td>
+              <td><strong>₹${totalAmt.toLocaleString('en-IN')}</strong></td>
+              <td colspan="2"></td>
+            </tr>
+          </tbody>
+        </table>`;
+      } catch (e) { wrap.innerHTML = '<p style="padding:20px;color:#a08060">Could not load sales</p>'; }
+    }
+
+    async function saveOfflineSale() {
+      const itemName = document.getElementById('olItemName').value.trim();
+      const date = document.getElementById('olDate').value;
+      const qty = document.getElementById('olQty').value;
+      const amount = document.getElementById('olAmount').value;
+      const note = document.getElementById('olNote').value.trim();
+      if (!itemName || !date || !qty || !amount) { showToast('⚠️ Fill all required fields'); return; }
+      const btn = document.getElementById('olSaveBtn');
+      btn.disabled = true; btn.textContent = '⏳ Saving…';
+      try {
+        const res = await api.adminPost('/api/offline-sales', { itemName, qty, amount, note, date });
+        if (res.error) { showToast('❌ ' + res.error); btn.disabled = false; btn.textContent = '💾 Save Sale'; return; }
+        showToast('✅ Sale recorded!');
+        document.getElementById('olItemName').value = '';
+        document.getElementById('olQty').value = '';
+        document.getElementById('olAmount').value = '';
+        document.getElementById('olNote').value = '';
+        await loadOfflineSales();
+      } catch (e) { showToast('❌ Failed to save sale'); }
+      btn.disabled = false; btn.textContent = '💾 Save Sale';
+    }
+
+    async function deleteOfflineSale(id) {
+      if (!confirm('Delete this sale entry?')) return;
+      try {
+        await api.adminDel(`/api/offline-sales/${id}`);
+        showToast('🗑️ Sale deleted');
+        loadOfflineSales();
+      } catch (e) { showToast('❌ Failed to delete'); }
+    }
+
+    // ─── CASH LEDGER ─────────────────────────────────────────────────────────
+    async function loadCashLedger() {
+      const wrap = document.getElementById('cashLedgerTableWrap');
+      wrap.innerHTML = '<div class="loading-spinner">⏳ Loading…</div>';
+      try {
+        const entries = await api.adminGet('/api/cash-entries');
+        // Compute summary
+        let totalIncome = 0, totalExpense = 0;
+        if (Array.isArray(entries)) {
+          entries.forEach(e => {
+            if (e.type === 'income') totalIncome += e.amount;
+            else totalExpense += e.amount;
+          });
+        }
+        const netPL = totalIncome - totalExpense;
+        document.getElementById('lc-total-income').textContent = '₹' + totalIncome.toLocaleString('en-IN');
+        document.getElementById('lc-total-expense').textContent = '₹' + totalExpense.toLocaleString('en-IN');
+        document.getElementById('lc-net-pl').textContent = (netPL < 0 ? '-₹' : '₹') + Math.abs(netPL).toLocaleString('en-IN');
+        const profitCard = document.getElementById('ledger-profit-card');
+        const plLabel = document.getElementById('lc-pl-label');
+        if (netPL < 0) {
+          profitCard.classList.add('loss');
+          plLabel.textContent = 'Net Loss';
+        } else {
+          profitCard.classList.remove('loss');
+          plLabel.textContent = 'Net Profit';
+        }
+        if (!Array.isArray(entries) || !entries.length) {
+          wrap.innerHTML = `<div class="empty-state"><div class="big-icon">📒</div><h3>No entries yet</h3><p>Add your first cash entry above.</p></div>`;
+          return;
+        }
+        wrap.innerHTML = `<table class="ledger-table">
+          <thead><tr><th>Date</th><th>Type</th><th>Amount (₹)</th><th>Description</th><th>Action</th></tr></thead>
+          <tbody>
+            ${entries.map(e => `<tr>
+              <td style="white-space:nowrap">${e.date}</td>
+              <td><span class="type-${e.type}">${e.type === 'income' ? '📈 Income' : '📉 Expense'}</span></td>
+              <td><strong>₹${e.amount.toLocaleString('en-IN')}</strong></td>
+              <td style="font-size:.85rem;color:#7a5c3a">${escHtml(e.description || '—')}</td>
+              <td><button class="btn-delete" onclick="deleteCashEntry('${e._id}')">🗑</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+      } catch (err) { wrap.innerHTML = '<p style="padding:20px;color:#a08060">Could not load entries</p>'; }
+    }
+
+    async function saveCashEntry() {
+      const type = document.getElementById('leType').value;
+      const date = document.getElementById('leDate').value;
+      const amount = document.getElementById('leAmount').value;
+      const description = document.getElementById('leDesc').value.trim();
+      if (!type || !date || !amount) { showToast('⚠️ Fill all required fields'); return; }
+      const btn = document.getElementById('leSaveBtn');
+      btn.disabled = true; btn.textContent = '⏳ Saving…';
+      try {
+        const res = await api.adminPost('/api/cash-entries', { type, amount, description, date });
+        if (res.error) { showToast('❌ ' + res.error); btn.disabled = false; btn.textContent = '💾 Add Entry'; return; }
+        showToast('✅ Entry added!');
+        document.getElementById('leType').value = '';
+        document.getElementById('leAmount').value = '';
+        document.getElementById('leDesc').value = '';
+        await loadCashLedger();
+      } catch (e) { showToast('❌ Failed to save'); }
+      btn.disabled = false; btn.textContent = '💾 Add Entry';
+    }
+
+    async function deleteCashEntry(id) {
+      if (!confirm('Delete this entry?')) return;
+      try {
+        await api.adminDel(`/api/cash-entries/${id}`);
+        showToast('🗑️ Entry deleted');
+        loadCashLedger();
+      } catch (e) { showToast('❌ Failed to delete'); }
     }
 
     // ─── MY ORDERS LOOKUP ──────────────────────────────────────────────────────
