@@ -172,21 +172,35 @@ app.delete('/api/categories/:id', requireAdmin, async (req, res) => {
 // ── PRODUCTS API ───────────────────────────────────────────────────────────
 
 // GET all products — public (customers need to browse)
+// NOTE: We exclude the raw base64 image data from the list response to avoid
+// loading potentially hundreds of MB of image strings into RAM all at once.
+// Images are served individually via /api/products/:id/image/:index instead.
 app.get('/api/products', async (req, res) => {
   try {
-    const products = await Product.find();
+    // Run both queries in parallel:
+    // 1. All product fields EXCEPT images (avoids loading base64 blobs into RAM)
+    // 2. Aggregation that counts images per product without fetching their data
+    const [products, imageCounts] = await Promise.all([
+      Product.find().select('-images').lean(),
+      Product.aggregate([
+        { $project: { id: 1, imageCount: { $size: { $ifNull: ['$images', []] } } } }
+      ])
+    ]);
+
+    // Build a fast lookup map: product.id → number of images
+    const countMap = {};
+    for (const p of imageCounts) {
+      countMap[p.id] = p.imageCount || 0;
+    }
+
+    // Attach image URL references (not actual base64 data) so the client
+    // can lazy-load each image via /api/products/:id/image/:index
     const mappedProducts = products.map(p => {
-      const pObj = p.toObject();
-      if (pObj.images && pObj.images.length > 0) {
-        pObj.images = pObj.images.map((img, index) => {
-          if (typeof img === 'string' && img.startsWith('data:')) {
-            return `/api/products/${pObj.id}/image/${index}`;
-          }
-          return img;
-        });
-      }
-      return pObj;
+      const count = countMap[p.id] || 0;
+      p.images = Array.from({ length: count }, (_, i) => `/api/products/${p.id}/image/${i}`);
+      return p;
     });
+
     res.json(mappedProducts);
   } catch (err) {
     res.status(500).json({ error: 'Failed to load products' });
@@ -534,27 +548,38 @@ app.post('/api/orders/track', async (req, res) => {
 });
 
 // ── Stats API — ADMIN ONLY ─────────────────────────────────────────────────
+// Uses DB-level aggregations instead of loading all documents into RAM
 app.get('/api/stats', requireAdmin, async (req, res) => {
   try {
-    const [products, orders, offlineSales] = await Promise.all([
-      Product.find(),
-      Order.find(),
-      OfflineSale.find()
+    const [totalProducts, totalOrders, lowStock, outStock, pendingOrders, newOrders, revenueAgg, offlineRevenueAgg] = await Promise.all([
+      Product.countDocuments(),
+      Order.countDocuments(),
+      Product.countDocuments({ stock: { $gt: 0, $lte: 5 } }),
+      Product.countDocuments({ stock: 0 }),
+      Order.countDocuments({ status: { $in: ['New', 'Processing'] } }),
+      Order.countDocuments({ status: 'New' }),
+      // Sum total for delivered online orders using aggregation (no full document load)
+      Order.aggregate([
+        { $match: { status: 'Delivered' } },
+        { $group: { _id: null, total: { $sum: '$total' } } }
+      ]),
+      // Sum offline sales revenue using aggregation
+      OfflineSale.aggregate([
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ])
     ]);
 
-    const onlineRevenue = orders
-      .filter(o => o.status === 'Delivered')
-      .reduce((s, o) => s + o.total, 0);
-    const offlineRevenue = offlineSales.reduce((s, o) => s + o.amount, 0);
+    const onlineRevenue = revenueAgg[0]?.total || 0;
+    const offlineRevenue = offlineRevenueAgg[0]?.total || 0;
 
     res.json({
-      totalProducts: products.length,
-      totalOrders: orders.length,
+      totalProducts,
+      totalOrders,
       totalRevenue: onlineRevenue + offlineRevenue,
-      lowStock: products.filter(p => p.stock > 0 && p.stock <= 5).length,
-      outStock: products.filter(p => p.stock === 0).length,
-      pendingOrders: orders.filter(o => ['New', 'Processing'].includes(o.status)).length,
-      newOrders: orders.filter(o => o.status === 'New').length,
+      lowStock,
+      outStock,
+      pendingOrders,
+      newOrders,
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to load stats' });
