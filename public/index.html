@@ -3541,16 +3541,24 @@ Total: ₹${order.total}`;
             .filter(Boolean),
         };
 
+        let res;
         if (editingId) {
           payload.keepImages = keepImages;
           payload.newImages = newBase64Images;
-          await api.adminPut(`/api/products/${editingId}`, payload);
-          showToast('✅ Rakhi updated!');
+          res = await api.adminPut(`/api/products/${editingId}`, payload);
         } else {
           payload.images = newBase64Images;
-          await api.adminPost('/api/products', payload);
-          showToast('✅ Rakhi added!');
+          res = await api.adminPost('/api/products', payload);
         }
+
+        if (res && res.error) {
+          showToast('❌ ' + res.error);
+          btn.disabled = false;
+          btn.textContent = '💾 Save Rakhi';
+          return;
+        }
+
+        showToast(editingId ? '✅ Rakhi updated!' : '✅ Rakhi added!');
 
         await loadProducts();
         renderCategoryChips(); filterProducts();
