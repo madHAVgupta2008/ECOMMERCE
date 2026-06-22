@@ -338,7 +338,7 @@ app.post('/api/products', requireAdmin, async (req, res) => {
     res.json(product);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to create product' });
+    res.status(500).json({ error: 'Failed to create product: ' + err.message });
   }
 });
 
@@ -405,7 +405,7 @@ app.put('/api/products/:id', requireAdmin, async (req, res) => {
     res.json(product);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to update product' });
+    res.status(500).json({ error: 'Failed to update product: ' + err.message });
   }
 });
 
