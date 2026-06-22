@@ -5,11 +5,62 @@ const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
+const cloudinary = require('cloudinary').v2;
 const Product = require('./models/Product');
 const Order = require('./models/Order');
 const Category = require('./models/Category');
 const OfflineSale = require('./models/OfflineSale');
 const CashEntry = require('./models/CashEntry');
+
+// ── Cloudinary Configuration ───────────────────────────────────────────────
+// Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET in env
+const CLOUDINARY_ENABLED = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+if (CLOUDINARY_ENABLED) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true
+  });
+  console.log('☁️  Cloudinary enabled — images will be uploaded to CDN');
+} else {
+  console.warn('⚠️  Cloudinary not configured — images stored as base64 (not recommended for production)');
+}
+
+/**
+ * Upload a base64 data-URI to Cloudinary.
+ * Returns the secure HTTPS URL or the original string if Cloudinary is not configured.
+ */
+async function uploadImageToCloudinary(base64DataUri, productId, imageIndex) {
+  if (!CLOUDINARY_ENABLED) return base64DataUri; // fallback: store as-is
+  if (!base64DataUri || !base64DataUri.startsWith('data:')) return base64DataUri; // already a URL
+  const result = await cloudinary.uploader.upload(base64DataUri, {
+    folder: 'rakhiroots/products',
+    public_id: `${productId}_img${imageIndex}_${Date.now()}`,
+    overwrite: false,
+    resource_type: 'image',
+    quality: 'auto:good',
+    fetch_format: 'auto'
+  });
+  return result.secure_url;
+}
+
+/**
+ * Delete an image from Cloudinary by its URL.
+ * Extracts the public_id from the URL and destroys it.
+ */
+async function deleteImageFromCloudinary(url) {
+  if (!CLOUDINARY_ENABLED || !url || !url.includes('res.cloudinary.com')) return;
+  try {
+    // Extract public_id from URL: everything between /upload/vXXX/ and the extension
+    const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-z]+)?$/);
+    if (match && match[1]) {
+      await cloudinary.uploader.destroy(match[1]);
+    }
+  } catch (e) {
+    console.warn('Could not delete Cloudinary image:', url, e.message);
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,8 +86,10 @@ app.use(cors(allowedOrigin
   : { origin: /^http:\/\/localhost(:\d+)?$/, credentials: true }
 ));
 
-// ── Body Parsers — reduced limit ───────────────────────────────────────────
-// Images are now compressed on the client side so 10 MB is plenty
+// ── Body Parsers ───────────────────────────────────────────────────────────
+// When Cloudinary is enabled images are uploaded directly from the browser
+// to Cloudinary, so the server only receives lightweight JSON (URLs).
+// We keep 10 MB as a fallback for when Cloudinary is not configured.
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -253,16 +306,21 @@ app.post('/api/products', requireAdmin, async (req, res) => {
     }
 
     const cleanedItemCode = itemCode.trim().toUpperCase();
-
     const existingProduct = await Product.findOne({ itemCode: cleanedItemCode });
     if (existingProduct) {
       return res.status(400).json({ error: 'Item Code must be unique' });
     }
 
-    const imageUrls = Array.isArray(images) ? images : [];
+    const productId = uuidv4();
+    const rawImages = Array.isArray(images) ? images : [];
+
+    // Upload any base64 images to Cloudinary; URLs pass through unchanged
+    const imageUrls = await Promise.all(
+      rawImages.map((img, i) => uploadImageToCloudinary(img, productId, i))
+    );
 
     const product = await Product.create({
-      id: uuidv4(),
+      id: productId,
       name,
       price: Number(price),
       oldPrice: oldPrice ? Number(oldPrice) : null,
@@ -306,6 +364,7 @@ app.put('/api/products/:id', requireAdmin, async (req, res) => {
     const addedImages = Array.isArray(newImages) ? newImages : [];
     const existingImages = Array.isArray(keepImages) ? keepImages : (keepImages ? JSON.parse(keepImages) : []);
 
+    // Resolve /api/products/:id/image/:index references back to actual stored values
     const resolvedExistingImages = [];
     for (const url of existingImages) {
       if (typeof url === 'string' && url.includes(`/api/products/${req.params.id}/image/`)) {
@@ -319,6 +378,17 @@ app.put('/api/products/:id', requireAdmin, async (req, res) => {
       }
     }
 
+    // Delete Cloudinary images that were removed by the admin
+    if (CLOUDINARY_ENABLED && product.images && product.images.length > 0) {
+      const removedImages = product.images.filter(img => !resolvedExistingImages.includes(img));
+      await Promise.all(removedImages.map(img => deleteImageFromCloudinary(img)));
+    }
+
+    // Upload any new base64 images to Cloudinary (existing URLs pass through)
+    const uploadedNewImages = await Promise.all(
+      addedImages.map((img, i) => uploadImageToCloudinary(img, req.params.id, resolvedExistingImages.length + i))
+    );
+
     if (name) product.name = name;
     if (price) product.price = Number(price);
     if (oldPrice !== undefined) product.oldPrice = oldPrice ? Number(oldPrice) : null;
@@ -327,7 +397,7 @@ app.put('/api/products/:id', requireAdmin, async (req, res) => {
     if (desc) product.desc = desc;
     if (emoji) product.emoji = emoji;
     if (colors !== undefined) product.colors = Array.isArray(colors) ? colors : [];
-    product.images = [...resolvedExistingImages, ...addedImages];
+    product.images = [...resolvedExistingImages, ...uploadedNewImages];
     product.updatedAt = new Date().toISOString();
 
     await product.save();
@@ -337,6 +407,7 @@ app.put('/api/products/:id', requireAdmin, async (req, res) => {
     res.status(500).json({ error: 'Failed to update product' });
   }
 });
+
 
 // PATCH update product stock — ADMIN ONLY
 app.patch('/api/products/:id/stock', requireAdmin, async (req, res) => {
