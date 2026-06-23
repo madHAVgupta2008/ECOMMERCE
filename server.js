@@ -64,6 +64,8 @@ async function deleteImageFromCloudinary(url) {
 }
 
 const app = express();
+// Trust proxy is required when deploying to platforms like Render
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 // ── JWT Secret (use env var in production, fallback for dev) ───────────────
