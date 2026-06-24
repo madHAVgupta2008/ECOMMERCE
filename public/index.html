@@ -2757,6 +2757,15 @@
     let allProducts = [];
     let allCategories = [];  // [{_id, name, emoji}]
     let cart = [];
+    try {
+      cart = JSON.parse(localStorage.getItem('rr_cart')) || [];
+    } catch(e) {
+      cart = [];
+    }
+    
+    function saveCart() {
+      localStorage.setItem('rr_cart', JSON.stringify(cart));
+    }
     let currentCategory = 'All';
     let newFiles = [];       // File objects for upload
     let keepImages = [];     // URLs to keep on edit
@@ -2805,6 +2814,7 @@
       renderCategoryChips();
       filterProducts();
       pollNewOrders();
+      updateCartCount();
     }
 
     async function loadProducts() {
@@ -3037,6 +3047,7 @@
       } else {
         cart.push({ cartKey, id, qty: 1, color: color || null });
       }
+      saveCart();
       updateCartCount();
       showToast(`✅ ${p.name}${color ? ' (' + color + ')' : ''} added!`);
       renderCartPanel();
@@ -3084,9 +3095,10 @@
       const p = allProducts.find(x => x.id === (item && item.id));
       if (!item || !p) return;
       item.qty = Math.max(1, Math.min(item.qty + d, p.stock));
+      saveCart();
       renderCartPanel(); updateCartCount();
     }
-    function removeFromCart(cartKey) { cart = cart.filter(i => i.cartKey !== cartKey); updateCartCount(); renderCartPanel(); }
+    function removeFromCart(cartKey) { cart = cart.filter(i => i.cartKey !== cartKey); saveCart(); updateCartCount(); renderCartPanel(); }
 
     // ─── CHECKOUT ──────────────────────────────────────────────────────────────
     function openCheckout() {
@@ -3196,6 +3208,7 @@ Total: ₹${order.total}`;
 
         // Clear cart
         cart = [];
+        saveCart();
         updateCartCount();
         renderCartPanel();
 
