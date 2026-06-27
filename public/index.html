@@ -3951,24 +3951,35 @@ Total: ₹${order.total}`;
       const disp = document.getElementById('olItemNameDisplay');
       const code = (inp ? inp.value : '').trim().toUpperCase();
       const qty = parseInt(qtyInp ? qtyInp.value : '1', 10);
-      const unitPrice = parseFloat(priceInp ? priceInp.value : '0');
 
       if (!code) { showToast('⚠️ Select a product first'); return; }
+
+      // Resolve product — either from dropdown selection or by direct code lookup
       if (!_olSelectedProduct || _olSelectedProduct.itemCode !== code) {
-        // Try to find by code in allProducts
         const found = allProducts.find(p => (p.itemCode || '').toUpperCase() === code);
         if (!found) { showToast('⚠️ Product not found in list. Use "Add Custom" below.'); return; }
         _olSelectedProduct = { itemCode: found.itemCode, itemName: found.name, price: found.price };
       }
+
+      // Auto-fill price from product if not already overridden by admin
+      const currentPriceVal = parseFloat(priceInp ? priceInp.value : '');
+      const resolvedPrice = (!priceInp.value || isNaN(currentPriceVal)) ? _olSelectedProduct.price : currentPriceVal;
+      if (priceInp) priceInp.value = resolvedPrice; // always show the resolved price
+
+      // Also update the name display if it wasn't set (typed directly without clicking suggestion)
+      if (disp && !disp.innerHTML.trim()) {
+        disp.innerHTML = `<span style="color:var(--bark)">📦 ${escHtml(_olSelectedProduct.itemName)}</span> <span style="color:#27ae60;font-weight:700">· ₹${_olSelectedProduct.price}</span>`;
+      }
+
       if (isNaN(qty) || qty < 1) { showToast('⚠️ Enter a valid quantity'); return; }
-      if (isNaN(unitPrice) || unitPrice < 0) { showToast('⚠️ Enter a valid unit price'); return; }
+      if (isNaN(resolvedPrice) || resolvedPrice < 0) { showToast('⚠️ Enter a valid unit price'); return; }
 
       olCart.push({
         itemCode: _olSelectedProduct.itemCode,
         itemName: _olSelectedProduct.itemName,
         qty,
-        unitPrice,
-        lineTotal: Math.round(qty * unitPrice * 100) / 100,
+        unitPrice: resolvedPrice,
+        lineTotal: Math.round(qty * resolvedPrice * 100) / 100,
         isCustom: false
       });
 
