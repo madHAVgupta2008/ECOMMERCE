@@ -637,9 +637,9 @@ app.get('/api/stats', requireAdmin, async (req, res) => {
         { $match: { status: 'Delivered' } },
         { $group: { _id: null, total: { $sum: '$total' } } }
       ]),
-      // Sum offline sales revenue using aggregation
+      // Sum offline sales revenue — uses finalAmount (new) or amount (legacy) for backward compat
       OfflineSale.aggregate([
-        { $group: { _id: null, total: { $sum: '$amount' } } }
+        { $group: { _id: null, total: { $sum: { $ifNull: ['$finalAmount', { $ifNull: ['$amount', 0] }] } } } }
       ])
     ]);
 
@@ -691,45 +691,73 @@ app.get('/api/offline-sales', requireAdmin, async (req, res) => {
 });
 
 // POST create offline sale — ADMIN ONLY
+// Body: { items: [{ itemCode, itemName, qty, unitPrice }], discount, note, date }
+// itemCode can be empty for custom/unlisted products
 app.post('/api/offline-sales', requireAdmin, async (req, res) => {
   try {
-    const { itemCode, qty, amount, note, date } = req.body;
-    if (!itemCode || !qty || !amount || !date)
-      return res.status(400).json({ error: 'Missing required fields' });
-    // Look up product by item code
-    const product = await Product.findOne({ itemCode: itemCode.trim().toUpperCase() });
-    if (!product)
-      return res.status(400).json({ error: `No product found with item code: ${itemCode.trim().toUpperCase()}` });
-    // Check sufficient stock
-    if (product.stock < Number(qty))
-      return res.status(400).json({ error: `Insufficient stock. Available: ${product.stock}` });
-    // Deduct stock
-    product.stock = Math.max(0, product.stock - Number(qty));
-    await product.save();
+    const { items, discount, note, date } = req.body;
+    if (!Array.isArray(items) || items.length === 0 || !date)
+      return res.status(400).json({ error: 'Missing required fields (items, date)' });
+
+    const processedItems = [];
+    for (const item of items) {
+      const qty = Number(item.qty);
+      const unitPrice = Number(item.unitPrice);
+      if (!item.itemName || isNaN(qty) || qty < 1 || isNaN(unitPrice) || unitPrice < 0)
+        return res.status(400).json({ error: 'Each item must have a name, valid qty and unit price' });
+
+      const lineTotal = Math.round(qty * unitPrice * 100) / 100;
+      let resolvedItemCode = (item.itemCode || '').trim().toUpperCase();
+      let resolvedItemName = item.itemName.trim();
+
+      // If an item code is provided, validate stock and deduct
+      if (resolvedItemCode) {
+        const product = await Product.findOne({ itemCode: resolvedItemCode });
+        if (!product)
+          return res.status(400).json({ error: `No product found with item code: ${resolvedItemCode}` });
+        if (product.stock < qty)
+          return res.status(400).json({ error: `Insufficient stock for "${product.name}". Available: ${product.stock}` });
+        product.stock = Math.max(0, product.stock - qty);
+        await product.save();
+        resolvedItemName = product.name; // always use DB name for listed products
+      }
+
+      processedItems.push({ itemCode: resolvedItemCode, itemName: resolvedItemName, qty, unitPrice, lineTotal });
+    }
+
+    const subTotal = Math.round(processedItems.reduce((s, i) => s + i.lineTotal, 0) * 100) / 100;
+    const discountAmt = Math.max(0, Number(discount) || 0);
+    const finalAmount = Math.max(0, Math.round((subTotal - discountAmt) * 100) / 100);
+
     const sale = await OfflineSale.create({
-      itemCode: itemCode.trim().toUpperCase(),
-      itemName: product.name,
-      qty: Number(qty),
-      amount: Number(amount),
+      items: processedItems,
+      subTotal,
+      discount: discountAmt,
+      finalAmount,
       note: (note || '').trim(),
       date
     });
     res.json(sale);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to record sale' });
   }
 });
 
-// DELETE offline sale — ADMIN ONLY (restores stock)
+// DELETE offline sale — ADMIN ONLY (restores stock for listed products)
 app.delete('/api/offline-sales/:id', requireAdmin, async (req, res) => {
   try {
     const sale = await OfflineSale.findById(req.params.id);
     if (!sale) return res.status(404).json({ error: 'Sale not found' });
-    // Restore stock
-    const product = await Product.findOne({ itemCode: sale.itemCode });
-    if (product) {
-      product.stock += sale.qty;
-      await product.save();
+    // Restore stock for each listed item (those with an itemCode)
+    for (const item of (sale.items || [])) {
+      if (item.itemCode) {
+        const product = await Product.findOne({ itemCode: item.itemCode });
+        if (product) {
+          product.stock += item.qty;
+          await product.save();
+        }
+      }
     }
     await OfflineSale.findByIdAndDelete(req.params.id);
     res.json({ ok: true });

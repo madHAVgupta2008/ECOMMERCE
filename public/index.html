@@ -2144,6 +2144,7 @@
         border-radius: 24px 24px 0 0;
       }
     }
+
     /* OFFLINE SALES */
     .ol-form {
       background: #fff;
@@ -2153,19 +2154,26 @@
       max-width: 620px;
       margin-bottom: 28px;
     }
+
     .ol-form h4 {
       font-family: 'Playfair Display', serif;
       font-size: 1.15rem;
       color: var(--bark);
       margin-bottom: 18px;
     }
+
     .ol-form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
     }
-    .ol-form-grid .full { grid-column: 1 / -1; }
-    .ol-form-grid input, .ol-form-grid select {
+
+    .ol-form-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .ol-form-grid input,
+    .ol-form-grid select {
       width: 100%;
       padding: 11px 14px;
       border: 2px solid #d4b483;
@@ -2178,8 +2186,19 @@
       color: var(--text-dark);
       -webkit-appearance: none;
     }
-    .ol-form-grid input:focus, .ol-form-grid select:focus { border-color: var(--saffron); }
-    .ol-form label { display: block; font-weight: 700; font-size: .85rem; margin-bottom: 5px; color: var(--bark); }
+
+    .ol-form-grid input:focus,
+    .ol-form-grid select:focus {
+      border-color: var(--saffron);
+    }
+
+    .ol-form label {
+      display: block;
+      font-weight: 700;
+      font-size: .85rem;
+      margin-bottom: 5px;
+      color: var(--bark);
+    }
 
     .sales-table {
       width: 100%;
@@ -2189,6 +2208,7 @@
       overflow: hidden;
       box-shadow: 0 2px 10px var(--shadow);
     }
+
     .sales-table th {
       background: var(--bark);
       color: var(--gold-light);
@@ -2198,15 +2218,27 @@
       font-weight: 700;
       letter-spacing: .04em;
     }
+
     .sales-table td {
       padding: 13px 16px;
       border-bottom: 1px solid #eddcc0;
       font-size: .9rem;
       vertical-align: middle;
     }
-    .sales-table tr:last-child td { border-bottom: none; }
-    .sales-table tr:hover td { background: #fdf3e3; }
-    .sales-total-row td { font-weight: 700; background: #fdf3e3 !important; color: var(--bark); }
+
+    .sales-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .sales-table tr:hover td {
+      background: #fdf3e3;
+    }
+
+    .sales-total-row td {
+      font-weight: 700;
+      background: #fdf3e3 !important;
+      color: var(--bark);
+    }
 
     /* CASH LEDGER */
     .ledger-summary {
@@ -2215,6 +2247,7 @@
       gap: 16px;
       margin-bottom: 28px;
     }
+
     .ledger-card {
       background: #fff;
       border-radius: 14px;
@@ -2223,13 +2256,39 @@
       box-shadow: 0 2px 12px var(--shadow);
       text-align: center;
     }
-    .ledger-card .lc-icon { font-size: 1.8rem; margin-bottom: 8px; }
-    .ledger-card .lc-val { font-size: 1.6rem; font-weight: 700; }
-    .ledger-card .lc-label { font-size: .8rem; color: #7a5c3a; font-weight: 600; margin-top: 4px; }
-    .lc-income .lc-val { color: var(--leaf); }
-    .lc-expense .lc-val { color: var(--deep-red); }
-    .lc-profit .lc-val { color: var(--bark); }
-    .lc-profit.loss .lc-val { color: #c0392b; }
+
+    .ledger-card .lc-icon {
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+    }
+
+    .ledger-card .lc-val {
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    .ledger-card .lc-label {
+      font-size: .8rem;
+      color: #7a5c3a;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .lc-income .lc-val {
+      color: var(--leaf);
+    }
+
+    .lc-expense .lc-val {
+      color: var(--deep-red);
+    }
+
+    .lc-profit .lc-val {
+      color: var(--bark);
+    }
+
+    .lc-profit.loss .lc-val {
+      color: #c0392b;
+    }
 
     .ledger-form {
       background: #fff;
@@ -2239,19 +2298,26 @@
       max-width: 620px;
       margin-bottom: 28px;
     }
+
     .ledger-form h4 {
       font-family: 'Playfair Display', serif;
       font-size: 1.15rem;
       color: var(--bark);
       margin-bottom: 18px;
     }
+
     .ledger-form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
     }
-    .ledger-form-grid .full { grid-column: 1 / -1; }
-    .ledger-form-grid input, .ledger-form-grid select {
+
+    .ledger-form-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .ledger-form-grid input,
+    .ledger-form-grid select {
       width: 100%;
       padding: 11px 14px;
       border: 2px solid #d4b483;
@@ -2264,8 +2330,19 @@
       color: var(--text-dark);
       -webkit-appearance: none;
     }
-    .ledger-form-grid input:focus, .ledger-form-grid select:focus { border-color: var(--saffron); }
-    .ledger-form label { display: block; font-weight: 700; font-size: .85rem; margin-bottom: 5px; color: var(--bark); }
+
+    .ledger-form-grid input:focus,
+    .ledger-form-grid select:focus {
+      border-color: var(--saffron);
+    }
+
+    .ledger-form label {
+      display: block;
+      font-weight: 700;
+      font-size: .85rem;
+      margin-bottom: 5px;
+      color: var(--bark);
+    }
 
     .ledger-table {
       width: 100%;
@@ -2275,6 +2352,7 @@
       overflow: hidden;
       box-shadow: 0 2px 10px var(--shadow);
     }
+
     .ledger-table th {
       background: var(--bark);
       color: var(--gold-light);
@@ -2284,27 +2362,51 @@
       font-weight: 700;
       letter-spacing: .04em;
     }
+
     .ledger-table td {
       padding: 13px 16px;
       border-bottom: 1px solid #eddcc0;
       font-size: .9rem;
       vertical-align: middle;
     }
-    .ledger-table tr:last-child td { border-bottom: none; }
-    .ledger-table tr:hover td { background: #fdf3e3; }
-    .type-income { color: var(--leaf); font-weight: 700; }
-    .type-expense { color: var(--deep-red); font-weight: 700; }
+
+    .ledger-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .ledger-table tr:hover td {
+      background: #fdf3e3;
+    }
+
+    .type-income {
+      color: var(--leaf);
+      font-weight: 700;
+    }
+
+    .type-expense {
+      color: var(--deep-red);
+      font-weight: 700;
+    }
 
     @media(max-width:700px) {
-      .ledger-summary { grid-template-columns: 1fr; }
-      .ol-form-grid { grid-template-columns: 1fr; }
-      .ledger-form-grid { grid-template-columns: 1fr; }
+      .ledger-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .ol-form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .ledger-form-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     /* ── COLOUR CHIPS ──────────────────────────────────────────── */
     .color-picker-row {
       margin-bottom: 18px;
     }
+
     .color-picker-label {
       font-size: .85rem;
       font-weight: 700;
@@ -2312,11 +2414,13 @@
       margin-bottom: 10px;
       display: block;
     }
+
     .color-chips-wrap {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
     }
+
     .color-chip {
       display: inline-flex;
       align-items: center;
@@ -2333,24 +2437,28 @@
       user-select: none;
       touch-action: manipulation;
     }
+
     .color-chip:hover {
       border-color: var(--saffron);
       background: #fff8f0;
     }
+
     .color-chip.selected {
       border-color: var(--saffron);
       background: linear-gradient(135deg, var(--saffron), var(--deep-red));
       color: #fff;
-      box-shadow: 0 3px 12px rgba(232,96,28,.35);
+      box-shadow: 0 3px 12px rgba(232, 96, 28, .35);
       transform: scale(1.04);
     }
+
     .color-dot {
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      border: 1.5px solid rgba(0,0,0,.15);
+      border: 1.5px solid rgba(0, 0, 0, .15);
       flex-shrink: 0;
     }
+
     .pv-color-required {
       font-size: .8rem;
       color: var(--deep-red);
@@ -2470,8 +2578,10 @@
         <div class="sidebar-item" id="sb-categories" onclick="showAdminSection('categories',this)">🏷️ Categories</div>
         <div class="sidebar-item" id="sb-orders" onclick="showAdminSection('orders',this)">📦 Orders <span
             class="new-orders-dot" id="newOrdersDot" style="display:none">0</span></div>
-        <div class="sidebar-item" id="sb-offline-sales" onclick="showAdminSection('offline-sales',this)">🏪 Offline Sales</div>
-        <div class="sidebar-item" id="sb-cash-ledger" onclick="showAdminSection('cash-ledger',this)">📒 Cash Ledger</div>
+        <div class="sidebar-item" id="sb-offline-sales" onclick="showAdminSection('offline-sales',this)">🏪 Offline
+          Sales</div>
+        <div class="sidebar-item" id="sb-cash-ledger" onclick="showAdminSection('cash-ledger',this)">📒 Cash Ledger
+        </div>
         <div class="sidebar-item" onclick="adminLogout()">🚪 Logout</div>
       </div>
       <div class="admin-content">
@@ -2493,14 +2603,10 @@
             <button class="btn-add" onclick="showAdminSection('add-product')">➕ Add New</button>
           </div>
           <div style="margin-bottom:20px">
-            <input
-              id="adminProductSearch"
-              type="text"
-              placeholder="🔍 Search by name, item code or category…"
+            <input id="adminProductSearch" type="text" placeholder="🔍 Search by name, item code or category…"
               oninput="filterAdminProducts()"
               style="width:100%;max-width:480px;padding:11px 18px;border:2px solid #d4b483;border-radius:50px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:#fff;transition:border-color .2s;color:var(--text-dark)"
-              onfocus="this.style.borderColor='var(--saffron)'"
-              onblur="this.style.borderColor='#d4b483'">
+              onfocus="this.style.borderColor='var(--saffron)'" onblur="this.style.borderColor='#d4b483'">
           </div>
           <div class="admin-products-grid" id="adminProductsGrid"></div>
         </div>
@@ -2531,7 +2637,8 @@
               <div class="form-row full"><label>Description *</label><textarea id="pDesc"
                   placeholder="Describe the materials, design, occasion…"></textarea></div>
               <div class="form-row full">
-                <label>Available Colours <small style="font-weight:400;color:#999">(optional — comma-separated, e.g. Red, Gold, Orange)</small></label>
+                <label>Available Colours <small style="font-weight:400;color:#999">(optional — comma-separated, e.g.
+                    Red, Gold, Orange)</small></label>
                 <input type="text" id="pColors" placeholder="e.g. Red, Gold, Orange, Maroon">
               </div>
               <div class="form-row full">
@@ -2586,36 +2693,106 @@
             <h2>🏪 Offline Sales</h2>
             <button class="btn-add" onclick="loadOfflineSales()">🔄 Refresh</button>
           </div>
-          <p style="color:#7a5c3a;font-size:.92rem;margin-bottom:20px;max-width:580px">Record items sold in person (offline). Each entry tracks the item name, quantity, and amount collected.</p>
+          <p style="color:#7a5c3a;font-size:.92rem;margin-bottom:20px;max-width:580px">Record items sold in person
+            (offline). Add multiple products, apply a discount, and the final amount is automatically added to Total Revenue.</p>
 
-          <div class="ol-form">
+          <div class="ol-form" style="max-width:780px">
             <h4>➕ Record a New Offline Sale</h4>
-            <div class="ol-form-grid">
-              <div style="position:relative">
-                <label>Item Code *</label>
-                <input type="text" id="olItemCodeInput" placeholder="Type code or name to search…" autocomplete="off"
-                  oninput="olFilterCodes()" onfocus="olFilterCodes()" onblur="olHideSugg()"
-                  style="width:100%;padding:11px 14px;border:2px solid #d4b483;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:var(--cream);transition:border-color .2s;color:var(--text-dark)">
-                <div id="olItemSuggestions" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:2px solid #d4b483;border-top:none;border-radius:0 0 10px 10px;max-height:220px;overflow-y:auto;z-index:9999;display:none;box-shadow:0 6px 20px rgba(92,58,30,.18)"></div>
-                <div id="olItemNameDisplay" style="margin-top:5px;font-size:.82rem;color:var(--bark);font-weight:600;min-height:16px"></div>
+
+            <!-- Date row -->
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-weight:700;font-size:.85rem;margin-bottom:5px;color:var(--bark)">Sale Date *</label>
+              <input type="date" id="olDate" style="padding:11px 14px;border:2px solid #d4b483;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:var(--cream);color:var(--text-dark);transition:border-color .2s;width:220px">
+            </div>
+
+            <!-- Add item from product list -->
+            <div style="background:#fdf3e3;border-radius:12px;padding:16px 18px;margin-bottom:14px;border:1px solid #e8d5b7">
+              <div style="font-weight:700;font-size:.88rem;color:var(--bark);margin-bottom:12px">📦 Add from Product List</div>
+              <div style="display:grid;grid-template-columns:1fr 80px 120px auto;gap:10px;align-items:end">
+                <div style="position:relative">
+                  <label style="display:block;font-weight:700;font-size:.82rem;margin-bottom:4px;color:var(--bark)">Search Product</label>
+                  <input type="text" id="olItemCodeInput" placeholder="Type code or name…" autocomplete="off"
+                    oninput="olFilterCodes()" onfocus="olFilterCodes()" onblur="olHideSugg()"
+                    style="width:100%;padding:10px 13px;border:2px solid #d4b483;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.9rem;outline:none;background:#fff;color:var(--text-dark)">
+                  <div id="olItemSuggestions"
+                    style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:2px solid #d4b483;border-top:none;border-radius:0 0 10px 10px;max-height:200px;overflow-y:auto;z-index:9999;display:none;box-shadow:0 6px 20px rgba(92,58,30,.18)">
+                  </div>
+                </div>
+                <div>
+                  <label style="display:block;font-weight:700;font-size:.82rem;margin-bottom:4px;color:var(--bark)">Qty</label>
+                  <input type="number" id="olQty" placeholder="1" min="1" value="1" onwheel="this.blur()"
+                    style="width:100%;padding:10px 10px;border:2px solid #d4b483;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.9rem;outline:none;background:#fff;color:var(--text-dark)">
+                </div>
+                <div>
+                  <label style="display:block;font-weight:700;font-size:.82rem;margin-bottom:4px;color:var(--bark)">Unit Price (₹)</label>
+                  <input type="number" id="olUnitPrice" placeholder="Auto-filled" min="0" onwheel="this.blur()"
+                    style="width:100%;padding:10px 10px;border:2px solid #d4b483;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.9rem;outline:none;background:#fff;color:var(--text-dark)">
+                </div>
+                <div>
+                  <label style="display:block;font-size:.82rem;margin-bottom:4px;color:transparent">·</label>
+                  <button class="btn-primary" style="padding:10px 18px;font-size:.88rem;white-space:nowrap" onclick="olAddListedProduct()">＋ Add</button>
+                </div>
               </div>
-              <div>
-                <label>Date *</label>
-                <input type="date" id="olDate">
-              </div>
-              <div>
-                <label>Quantity *</label>
-                <input type="number" id="olQty" placeholder="e.g. 3" min="1" onwheel="this.blur()">
-              </div>
-              <div>
-                <label>Amount Collected (₹) *</label>
-                <input type="number" id="olAmount" placeholder="e.g. 450" min="0" onwheel="this.blur()">
-              </div>
-              <div class="full">
-                <label>Note <small style="font-weight:400;color:#999">(optional)</small></label>
-                <input type="text" id="olNote" placeholder="e.g. Cash payment, festival sale">
+              <div id="olItemNameDisplay" style="margin-top:7px;font-size:.82rem;color:var(--bark);font-weight:600;min-height:16px"></div>
+            </div>
+
+            <!-- Add custom/unlisted product -->
+            <div style="background:#f0faf4;border-radius:12px;padding:16px 18px;margin-bottom:18px;border:1px solid #c3e0ce">
+              <div style="font-weight:700;font-size:.88rem;color:#2d6a4f;margin-bottom:12px">✏️ Add Custom / Unlisted Product</div>
+              <div style="display:grid;grid-template-columns:1fr 80px 120px auto;gap:10px;align-items:end">
+                <div>
+                  <label style="display:block;font-weight:700;font-size:.82rem;margin-bottom:4px;color:#2d6a4f">Product Name *</label>
+                  <input type="text" id="olCustomName" placeholder="e.g. Fancy Rakhi Set"
+                    style="width:100%;padding:10px 13px;border:2px solid #95d5b2;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.9rem;outline:none;background:#fff;color:var(--text-dark)">
+                </div>
+                <div>
+                  <label style="display:block;font-weight:700;font-size:.82rem;margin-bottom:4px;color:#2d6a4f">Qty</label>
+                  <input type="number" id="olCustomQty" placeholder="1" min="1" value="1" onwheel="this.blur()"
+                    style="width:100%;padding:10px 10px;border:2px solid #95d5b2;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.9rem;outline:none;background:#fff;color:var(--text-dark)">
+                </div>
+                <div>
+                  <label style="display:block;font-weight:700;font-size:.82rem;margin-bottom:4px;color:#2d6a4f">Unit Price (₹) *</label>
+                  <input type="number" id="olCustomPrice" placeholder="e.g. 200" min="0" onwheel="this.blur()"
+                    style="width:100%;padding:10px 10px;border:2px solid #95d5b2;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.9rem;outline:none;background:#fff;color:var(--text-dark)">
+                </div>
+                <div>
+                  <label style="display:block;font-size:.82rem;margin-bottom:4px;color:transparent">·</label>
+                  <button style="padding:10px 18px;font-size:.88rem;white-space:nowrap;background:var(--leaf);color:#fff;border:none;border-radius:9px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;transition:opacity .2s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'" onclick="olAddCustomProduct()">＋ Add</button>
+                </div>
               </div>
             </div>
+
+            <!-- Cart / items added -->
+            <div id="olCartWrap" style="display:none;margin-bottom:18px">
+              <div style="font-weight:700;font-size:.9rem;color:var(--bark);margin-bottom:10px">🛒 Items in this Sale</div>
+              <div id="olCartItems"></div>
+            </div>
+
+            <!-- Totals + discount + note -->
+            <div id="olTotalsWrap" style="display:none;background:#fff;border:2px solid #d4b483;border-radius:14px;padding:18px 22px;margin-bottom:18px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                <span style="font-size:.95rem;color:var(--bark)">Subtotal</span>
+                <span style="font-size:1.05rem;font-weight:700;color:var(--bark)" id="olSubtotalDisplay">₹0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:10px">
+                <label for="olDiscount" style="font-size:.95rem;color:#c0392b;font-weight:700;white-space:nowrap">🏷️ Discount (₹)</label>
+                <input type="number" id="olDiscount" placeholder="0" min="0" value="0" onwheel="this.blur()" oninput="olRecalcTotals()"
+                  style="width:130px;padding:9px 12px;border:2px solid #f5a7a7;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:#fff5f5;color:#c0392b;text-align:right">
+              </div>
+              <div style="border-top:2px dashed #d4b483;margin:12px 0"></div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:1.05rem;font-weight:700;color:var(--bark)">💰 Final Amount</span>
+                <span style="font-size:1.35rem;font-weight:800;color:var(--deep-red)" id="olFinalDisplay">₹0</span>
+              </div>
+              <div style="font-size:.78rem;color:#aaa;margin-top:6px;text-align:right">This amount will be added to Total Revenue</div>
+            </div>
+
+            <div style="margin-bottom:14px">
+              <label style="display:block;font-weight:700;font-size:.85rem;margin-bottom:5px;color:var(--bark)">Note <small style="font-weight:400;color:#999">(optional)</small></label>
+              <input type="text" id="olNote" placeholder="e.g. Cash payment, festival sale"
+                style="width:100%;max-width:480px;padding:11px 14px;border:2px solid #d4b483;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:var(--cream);color:var(--text-dark)">
+            </div>
+
             <div style="margin-top:18px">
               <button class="btn-primary" id="olSaveBtn" onclick="saveOfflineSale()">💾 Save Sale</button>
             </div>
@@ -2632,7 +2809,8 @@
             <h2>📒 Cash Ledger</h2>
             <button class="btn-add" onclick="loadCashLedger()">🔄 Refresh</button>
           </div>
-          <p style="color:#7a5c3a;font-size:.92rem;margin-bottom:20px;max-width:580px">Record daily incoming and outgoing money. The summary below shows your total income, expenses, and net profit or loss.</p>
+          <p style="color:#7a5c3a;font-size:.92rem;margin-bottom:20px;max-width:580px">Record daily incoming and
+            outgoing money. The summary below shows your total income, expenses, and net profit or loss.</p>
 
           <div class="ledger-summary" id="ledgerSummary">
             <div class="ledger-card lc-income">
@@ -2759,10 +2937,10 @@
     let cart = [];
     try {
       cart = JSON.parse(localStorage.getItem('rr_cart')) || [];
-    } catch(e) {
+    } catch (e) {
       cart = [];
     }
-    
+
     function saveCart() {
       localStorage.setItem('rr_cart', JSON.stringify(cart));
     }
@@ -2774,11 +2952,11 @@
 
     // ── COLOUR DOT HELPER ──────────────────────────────────────────────────────
     const COLOR_MAP = {
-      red:'#e74c3c', orange:'#e8601c', gold:'#d4a017', yellow:'#f1c40f',
-      green:'#27ae60', blue:'#2980b9', pink:'#e91e8c', maroon:'#9b1d20',
-      purple:'#8e44ad', white:'#f5f5f5', black:'#222', silver:'#aaa',
-      cream:'#fdf6ec', saffron:'#e8601c', brown:'#5c3a1e', grey:'#888',
-      gray:'#888', navy:'#1a237e', turquoise:'#1abc9c', magenta:'#9b59b6'
+      red: '#e74c3c', orange: '#e8601c', gold: '#d4a017', yellow: '#f1c40f',
+      green: '#27ae60', blue: '#2980b9', pink: '#e91e8c', maroon: '#9b1d20',
+      purple: '#8e44ad', white: '#f5f5f5', black: '#222', silver: '#aaa',
+      cream: '#fdf6ec', saffron: '#e8601c', brown: '#5c3a1e', grey: '#888',
+      gray: '#888', navy: '#1a237e', turquoise: '#1abc9c', magenta: '#9b59b6'
     };
     function colorDot(name) {
       const key = name.toLowerCase().trim();
@@ -2955,8 +3133,8 @@
         <div class="product-name">${p.name}</div>
         <div class="product-desc" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${p.desc}</div>
         <div class="product-price">₹${p.price}${p.oldPrice ? `<small>₹${p.oldPrice}</small>` : ''}</div>
-        <button class="add-cart-btn" onclick="event.stopPropagation();${p.colors && p.colors.filter(c=>c.trim()).length ? `showProductPopup('${p.id}')` : `addToCart('${p.id}')`}" ${p.stock === 0 ? 'disabled' : ''}>
-          ${p.stock === 0 ? '❌ Out of Stock' : (p.colors && p.colors.filter(c=>c.trim()).length ? '🎨 Choose Colour' : '🛒 Add to Cart')}
+        <button class="add-cart-btn" onclick="event.stopPropagation();${p.colors && p.colors.filter(c => c.trim()).length ? `showProductPopup('${p.id}')` : `addToCart('${p.id}')`}" ${p.stock === 0 ? 'disabled' : ''}>
+          ${p.stock === 0 ? '❌ Out of Stock' : (p.colors && p.colors.filter(c => c.trim()).length ? '🎨 Choose Colour' : '🛒 Add to Cart')}
         </button>
       </div>
     </div>`;
@@ -3283,7 +3461,18 @@ Total: ₹${order.total}`;
       if (name === 'orders') loadOrders();
       if (name === 'categories') loadAdminCategories();
       if (name === 'add-product') { resetForm(); populateCategoryDropdown(); }
-      if (name === 'offline-sales') loadOfflineSales();
+      if (name === 'offline-sales') {
+        loadOfflineSales();
+        // Auto-fill today's date
+        const dateInp = document.getElementById('olDate');
+        if (dateInp && !dateInp.value) {
+          const today = new Date();
+          const yyyy = today.getFullYear();
+          const mm = String(today.getMonth() + 1).padStart(2, '0');
+          const dd = String(today.getDate()).padStart(2, '0');
+          dateInp.value = `${yyyy}-${mm}-${dd}`;
+        }
+      }
       if (name === 'cash-ledger') loadCashLedger();
     }
 
@@ -3710,7 +3899,10 @@ Total: ₹${order.total}`;
     }
 
     // ─── OFFLINE SALES ────────────────────────────────────────────────────────
-    // live-search autocomplete for item code
+    // Cart holds items to be saved in one sale
+    let olCart = []; // [{ itemCode, itemName, qty, unitPrice, lineTotal, isCustom }]
+    let _olSelectedProduct = null; // currently selected product from suggestions
+
     function olFilterCodes() {
       const inp = document.getElementById('olItemCodeInput');
       const sugg = document.getElementById('olItemSuggestions');
@@ -3718,27 +3910,31 @@ Total: ₹${order.total}`;
       const q = inp.value.toLowerCase().trim();
       const matches = q
         ? allProducts.filter(p =>
-            (p.itemCode || '').toLowerCase().includes(q) ||
-            p.name.toLowerCase().includes(q))
+          (p.itemCode || '').toLowerCase().includes(q) ||
+          p.name.toLowerCase().includes(q))
         : allProducts;
       if (!matches.length) { sugg.style.display = 'none'; return; }
       sugg.innerHTML = matches.map(p =>
         `<div style="padding:9px 14px;cursor:pointer;border-bottom:1px solid #f0e0c8;font-size:.9rem"
-              onmousedown="olSelectCode(${JSON.stringify(p.itemCode||'')},${JSON.stringify(p.name)})"
+              onmousedown="olSelectCode(${JSON.stringify(p.itemCode || '')},${JSON.stringify(p.name)},${p.price})"
               onmouseover="this.style.background='#fdf3e3'"
               onmouseout="this.style.background=''"
-         ><strong style="font-family:monospace;color:var(--bark);background:#f2e6d9;padding:1px 6px;border-radius:3px">${escHtml(p.itemCode||'')}</strong>&nbsp;— ${escHtml(p.name)}</div>`
+         ><strong style="font-family:monospace;color:var(--bark);background:#f2e6d9;padding:1px 6px;border-radius:3px">${escHtml(p.itemCode || '')}</strong>&nbsp;— ${escHtml(p.name)} <span style="color:#27ae60;font-weight:700;float:right">₹${p.price}</span></div>`
       ).join('');
       sugg.style.display = 'block';
     }
 
-    function olSelectCode(code, name) {
-      const inp  = document.getElementById('olItemCodeInput');
+    function olSelectCode(code, name, price) {
+      const inp = document.getElementById('olItemCodeInput');
       const disp = document.getElementById('olItemNameDisplay');
+      const priceInp = document.getElementById('olUnitPrice');
       const sugg = document.getElementById('olItemSuggestions');
-      if (inp)  inp.value = code;
-      if (disp) disp.textContent = name;
+      if (inp) inp.value = code;
+      if (disp) disp.innerHTML = `<span style="color:var(--bark)">📦 ${escHtml(name)}</span> <span style="color:#27ae60;font-weight:700">· ₹${price}</span>`;
+      if (priceInp && !priceInp.value) priceInp.value = price; // auto-fill price
+      else if (priceInp) priceInp.value = price; // always refresh to product price
       if (sugg) sugg.style.display = 'none';
+      _olSelectedProduct = { itemCode: code, itemName: name, price };
     }
 
     function olHideSugg() {
@@ -3746,6 +3942,135 @@ Total: ₹${order.total}`;
         const sugg = document.getElementById('olItemSuggestions');
         if (sugg) sugg.style.display = 'none';
       }, 180);
+    }
+
+    function olAddListedProduct() {
+      const inp = document.getElementById('olItemCodeInput');
+      const qtyInp = document.getElementById('olQty');
+      const priceInp = document.getElementById('olUnitPrice');
+      const disp = document.getElementById('olItemNameDisplay');
+      const code = (inp ? inp.value : '').trim().toUpperCase();
+      const qty = parseInt(qtyInp ? qtyInp.value : '1', 10);
+      const unitPrice = parseFloat(priceInp ? priceInp.value : '0');
+
+      if (!code) { showToast('⚠️ Select a product first'); return; }
+      if (!_olSelectedProduct || _olSelectedProduct.itemCode !== code) {
+        // Try to find by code in allProducts
+        const found = allProducts.find(p => (p.itemCode || '').toUpperCase() === code);
+        if (!found) { showToast('⚠️ Product not found in list. Use "Add Custom" below.'); return; }
+        _olSelectedProduct = { itemCode: found.itemCode, itemName: found.name, price: found.price };
+      }
+      if (isNaN(qty) || qty < 1) { showToast('⚠️ Enter a valid quantity'); return; }
+      if (isNaN(unitPrice) || unitPrice < 0) { showToast('⚠️ Enter a valid unit price'); return; }
+
+      olCart.push({
+        itemCode: _olSelectedProduct.itemCode,
+        itemName: _olSelectedProduct.itemName,
+        qty,
+        unitPrice,
+        lineTotal: Math.round(qty * unitPrice * 100) / 100,
+        isCustom: false
+      });
+
+      // Reset fields
+      inp.value = '';
+      if (disp) disp.innerHTML = '';
+      qtyInp.value = '1';
+      priceInp.value = '';
+      _olSelectedProduct = null;
+      olRenderCart();
+    }
+
+    function olAddCustomProduct() {
+      const nameInp = document.getElementById('olCustomName');
+      const qtyInp = document.getElementById('olCustomQty');
+      const priceInp = document.getElementById('olCustomPrice');
+      const name = (nameInp ? nameInp.value : '').trim();
+      const qty = parseInt(qtyInp ? qtyInp.value : '1', 10);
+      const unitPrice = parseFloat(priceInp ? priceInp.value : '0');
+
+      if (!name) { showToast('⚠️ Enter a product name'); return; }
+      if (isNaN(qty) || qty < 1) { showToast('⚠️ Enter a valid quantity'); return; }
+      if (isNaN(unitPrice) || unitPrice < 0) { showToast('⚠️ Enter a valid unit price'); return; }
+
+      olCart.push({
+        itemCode: '',
+        itemName: name,
+        qty,
+        unitPrice,
+        lineTotal: Math.round(qty * unitPrice * 100) / 100,
+        isCustom: true
+      });
+
+      // Reset fields
+      nameInp.value = '';
+      qtyInp.value = '1';
+      priceInp.value = '';
+      olRenderCart();
+    }
+
+    function olRemoveCartItem(idx) {
+      olCart.splice(idx, 1);
+      olRenderCart();
+    }
+
+    function olRenderCart() {
+      const cartWrap = document.getElementById('olCartWrap');
+      const cartItems = document.getElementById('olCartItems');
+      const totalsWrap = document.getElementById('olTotalsWrap');
+      if (!cartWrap || !cartItems) return;
+
+      if (!olCart.length) {
+        cartWrap.style.display = 'none';
+        if (totalsWrap) totalsWrap.style.display = 'none';
+        return;
+      }
+
+      cartWrap.style.display = 'block';
+      if (totalsWrap) totalsWrap.style.display = 'block';
+
+      cartItems.innerHTML = `<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #eddcc0;font-size:.9rem">
+        <thead>
+          <tr style="background:var(--bark);color:var(--gold-light)">
+            <th style="padding:10px 14px;text-align:left">Product</th>
+            <th style="padding:10px 12px;text-align:center">Code</th>
+            <th style="padding:10px 10px;text-align:center">Qty</th>
+            <th style="padding:10px 10px;text-align:right">Unit ₹</th>
+            <th style="padding:10px 10px;text-align:right">Total ₹</th>
+            <th style="padding:10px 10px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${olCart.map((item, i) => `
+            <tr style="border-bottom:1px solid #f0e0c8">
+              <td style="padding:10px 14px">
+                ${item.isCustom ? '<span style="font-size:.72rem;background:#e8f5e9;color:#2d6a4f;padding:1px 6px;border-radius:4px;margin-right:5px">CUSTOM</span>' : ''}
+                ${escHtml(item.itemName)}
+              </td>
+              <td style="padding:10px 12px;text-align:center;font-family:monospace;font-size:.82rem">
+                ${item.itemCode ? `<span style="background:#f2e6d9;padding:1px 5px;border-radius:3px">${escHtml(item.itemCode)}</span>` : '—'}
+              </td>
+              <td style="padding:10px 10px;text-align:center;font-weight:700">${item.qty}</td>
+              <td style="padding:10px 10px;text-align:right">₹${item.unitPrice.toLocaleString('en-IN')}</td>
+              <td style="padding:10px 10px;text-align:right;font-weight:700">₹${item.lineTotal.toLocaleString('en-IN')}</td>
+              <td style="padding:10px 10px;text-align:center">
+                <button onclick="olRemoveCartItem(${i})" style="background:#e74c3c;color:#fff;border:none;border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:.85rem;line-height:1" title="Remove">✕</button>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+
+      olRecalcTotals();
+    }
+
+    function olRecalcTotals() {
+      const subTotal = olCart.reduce((s, i) => s + i.lineTotal, 0);
+      const discount = Math.max(0, parseFloat(document.getElementById('olDiscount')?.value || '0') || 0);
+      const finalAmount = Math.max(0, subTotal - discount);
+      const fmt = n => '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      const el = id => document.getElementById(id);
+      if (el('olSubtotalDisplay')) el('olSubtotalDisplay').textContent = fmt(subTotal);
+      if (el('olFinalDisplay')) el('olFinalDisplay').textContent = fmt(finalAmount);
     }
 
     async function loadOfflineSales() {
@@ -3757,24 +4082,51 @@ Total: ₹${order.total}`;
           wrap.innerHTML = `<div class="empty-state"><div class="big-icon">🏪</div><h3>No offline sales yet</h3><p>Record your first sale above.</p></div>`;
           return;
         }
-        let totalQty = 0, totalAmt = 0;
-        sales.forEach(s => { totalQty += s.qty; totalAmt += s.amount; });
+        let grandTotal = 0, grandDiscount = 0, grandFinal = 0;
+        sales.forEach(s => {
+          grandTotal += (s.subTotal || s.amount || 0);
+          grandDiscount += (s.discount || 0);
+          grandFinal += (s.finalAmount || s.amount || 0);
+        });
         wrap.innerHTML = `<table class="sales-table">
-          <thead><tr><th>Date</th><th>Item Code</th><th>Item Name</th><th>Qty</th><th>Amount (₹)</th><th>Note</th><th>Action</th></tr></thead>
+          <thead><tr>
+            <th>Date</th>
+            <th>Items Sold</th>
+            <th style="text-align:right">Subtotal (₹)</th>
+            <th style="text-align:right">Discount (₹)</th>
+            <th style="text-align:right">Final (₹)</th>
+            <th>Note</th>
+            <th>Action</th>
+          </tr></thead>
           <tbody>
-            ${sales.map(s => `<tr>
-              <td style="white-space:nowrap">${s.date}</td>
-              <td><strong style="font-family:monospace;background:#f2e6d9;padding:2px 7px;border-radius:4px">${escHtml(s.itemCode || '')}</strong></td>
-              <td>${escHtml(s.itemName || '')}</td>
-              <td>${s.qty}</td>
-              <td><strong>₹${s.amount.toLocaleString('en-IN')}</strong></td>
-              <td style="font-size:.85rem;color:#7a5c3a">${escHtml(s.note || '—')}</td>
-              <td><button class="btn-delete" onclick="deleteOfflineSale('${s._id}')">&#128465;</button></td>
-            </tr>`).join('')}
+            ${sales.map(s => {
+              // Support both new multi-item format and legacy single-item format
+              const itemsHtml = Array.isArray(s.items) && s.items.length
+                ? s.items.map(it => `<div style="font-size:.82rem;line-height:1.6">
+                    ${it.itemCode ? `<span style="font-family:monospace;background:#f2e6d9;padding:0 4px;border-radius:3px;font-size:.78rem">${escHtml(it.itemCode)}</span> ` : ''}${escHtml(it.itemName)} ×${it.qty}
+                    <span style="color:#7a5c3a"> @ ₹${it.unitPrice}</span>
+                  </div>`).join('')
+                : `<div style="font-size:.82rem">${escHtml(s.itemName || '')} (${s.itemCode || '—'}) ×${s.qty || 1}</div>`;
+
+              const subTotal = s.subTotal || s.amount || 0;
+              const discount = s.discount || 0;
+              const finalAmt = s.finalAmount || s.amount || 0;
+
+              return `<tr>
+                <td style="white-space:nowrap">${s.date}</td>
+                <td>${itemsHtml}</td>
+                <td style="text-align:right">₹${subTotal.toLocaleString('en-IN')}</td>
+                <td style="text-align:right;color:#c0392b">${discount > 0 ? '-₹' + discount.toLocaleString('en-IN') : '—'}</td>
+                <td style="text-align:right"><strong>₹${finalAmt.toLocaleString('en-IN')}</strong></td>
+                <td style="font-size:.82rem;color:#7a5c3a">${escHtml(s.note || '—')}</td>
+                <td><button class="btn-delete" onclick="deleteOfflineSale('${s._id}')">&#128465;</button></td>
+              </tr>`;
+            }).join('')}
             <tr class="sales-total-row">
-              <td colspan="3"><strong>Total</strong></td>
-              <td><strong>${totalQty}</strong></td>
-              <td><strong>₹${totalAmt.toLocaleString('en-IN')}</strong></td>
+              <td colspan="2"><strong>Grand Total</strong></td>
+              <td style="text-align:right"><strong>₹${grandTotal.toLocaleString('en-IN')}</strong></td>
+              <td style="text-align:right;color:#c0392b"><strong>-₹${grandDiscount.toLocaleString('en-IN')}</strong></td>
+              <td style="text-align:right;color:var(--deep-red)"><strong>₹${grandFinal.toLocaleString('en-IN')}</strong></td>
               <td colspan="2"></td>
             </tr>
           </tbody>
@@ -3783,34 +4135,51 @@ Total: ₹${order.total}`;
     }
 
     async function saveOfflineSale() {
-      const itemCode = (document.getElementById('olItemCodeInput').value || '').trim().toUpperCase();
       const date = document.getElementById('olDate').value;
-      const qty = document.getElementById('olQty').value;
-      const amount = document.getElementById('olAmount').value;
-      const note = document.getElementById('olNote').value.trim();
-      if (!itemCode || !date || !qty || !amount) { showToast('⚠️ Fill all required fields'); return; }
+      const note = (document.getElementById('olNote')?.value || '').trim();
+      const discount = Math.max(0, parseFloat(document.getElementById('olDiscount')?.value || '0') || 0);
+
+      if (!date) { showToast('⚠️ Please select a sale date'); return; }
+      if (!olCart.length) { showToast('⚠️ Add at least one product to the sale'); return; }
+
       const btn = document.getElementById('olSaveBtn');
       btn.disabled = true; btn.textContent = '⏳ Saving…';
       try {
-        const res = await api.adminPost('/api/offline-sales', { itemCode, qty, amount, note, date });
+        const payload = {
+          items: olCart.map(({ itemCode, itemName, qty, unitPrice, lineTotal }) => ({ itemCode, itemName, qty, unitPrice, lineTotal })),
+          discount,
+          note,
+          date
+        };
+        const res = await api.adminPost('/api/offline-sales', payload);
         if (res.error) { showToast('❌ ' + res.error); btn.disabled = false; btn.textContent = '💾 Save Sale'; return; }
         showToast('✅ Sale recorded!');
+        // Reset the form
+        olCart = [];
+        _olSelectedProduct = null;
         document.getElementById('olItemCodeInput').value = '';
-        document.getElementById('olItemNameDisplay').textContent = '';
-        document.getElementById('olQty').value = '';
-        document.getElementById('olAmount').value = '';
+        document.getElementById('olItemNameDisplay').innerHTML = '';
+        document.getElementById('olQty').value = '1';
+        document.getElementById('olUnitPrice').value = '';
+        document.getElementById('olCustomName').value = '';
+        document.getElementById('olCustomQty').value = '1';
+        document.getElementById('olCustomPrice').value = '';
+        document.getElementById('olDiscount').value = '0';
         document.getElementById('olNote').value = '';
+        olRenderCart();
         await loadOfflineSales();
+        loadStats();
       } catch (e) { showToast('❌ Failed to save sale'); }
       btn.disabled = false; btn.textContent = '💾 Save Sale';
     }
 
     async function deleteOfflineSale(id) {
-      if (!confirm('Delete this sale entry?')) return;
+      if (!confirm('Delete this sale entry? Stock will be restored for listed products.')) return;
       try {
         await api.adminDel(`/api/offline-sales/${id}`);
         showToast('🗑️ Sale deleted');
         loadOfflineSales();
+        loadStats();
       } catch (e) { showToast('❌ Failed to delete'); }
     }
 
