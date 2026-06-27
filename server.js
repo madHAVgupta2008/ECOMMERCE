@@ -463,15 +463,20 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
     let total = 0;
     const processedItems = [];
     for (const item of items) {
+      // ── FIX #5: Validate qty is a positive integer ──────────────────────
+      const qty = parseInt(item.qty, 10);
+      if (!Number.isInteger(qty) || qty < 1) {
+        return res.status(400).json({ error: `Invalid quantity for item: ${item.id}. Quantity must be a positive whole number.` });
+      }
       const p = await Product.findOne({ id: item.id });
       if (!p) return res.status(400).json({ error: `Product not found: ${item.id}` });
-      if (p.stock < item.qty) return res.status(400).json({ error: `Insufficient stock for: ${p.name}` });
-      total += p.price * item.qty;
+      if (p.stock < qty) return res.status(400).json({ error: `Insufficient stock for: ${p.name}` });
+      total += p.price * qty;
       processedItems.push({
         id: item.id,
         name: p.name,
         price: p.price,
-        qty: item.qty,
+        qty,
         itemCode: p.itemCode || ''
       });
     }
@@ -514,6 +519,12 @@ app.patch('/api/orders/:id/status', requireAdmin, async (req, res) => {
 
     const oldStatus = order.status;
     const newStatus = req.body.status;
+
+    // ── FIX #6: Whitelist allowed order statuses ────────────────────────────
+    const ALLOWED_STATUSES = ['New', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+    if (!ALLOWED_STATUSES.includes(newStatus)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${ALLOWED_STATUSES.join(', ')}` });
+    }
 
     // Reduce stock only first time order becomes Delivered
     if (oldStatus !== 'Delivered' && newStatus === 'Delivered') {
