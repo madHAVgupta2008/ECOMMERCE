@@ -572,14 +572,40 @@ app.put('/api/orders/:id', requireAdmin, async (req, res) => {
       const updatedItems = [];
 
       for (const incoming of items) {
-        const existing = order.items.find(i => i.id === incoming.id);
-        if (!existing) continue; // ignore unknown product IDs
-
         const qty = parseInt(incoming.qty, 10);
         if (!Number.isInteger(qty) || qty < 0) {
           return res.status(400).json({ error: `Invalid quantity for item ${incoming.id}` });
         }
 
+        const existing = order.items.find(i => i.id === incoming.id);
+        
+        if (!existing) {
+          // It's a new item added to the order
+          if (qty === 0) continue; // Ignore if added with 0 qty
+
+          const p = await Product.findOne({ id: incoming.id });
+          if (!p) {
+             return res.status(400).json({ error: `Product not found: ${incoming.id}` });
+          }
+          
+          updatedItems.push({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            qty: qty,
+            itemCode: p.itemCode
+          });
+          newTotal += p.price * qty;
+
+          // Deduct stock if order is Delivered
+          if (order.status === 'Delivered') {
+            p.stock = Math.max(0, p.stock - qty);
+            await p.save();
+          }
+          continue;
+        }
+
+        // Handle existing item (qty changes or removal)
         // qty === 0 means the item was returned/removed — skip adding it
         if (qty === 0) {
           // If order was Delivered, restore stock for the removed item
@@ -599,6 +625,14 @@ app.put('/api/orders/:id', requireAdmin, async (req, res) => {
           const p = await Product.findOne({ id: existing.id });
           if (p) {
             p.stock += diff;
+            await p.save();
+          }
+        } else if (order.status === 'Delivered' && qty > existing.qty) {
+          // If qty increased, deduct difference from stock
+          const diff = qty - existing.qty;
+          const p = await Product.findOne({ id: existing.id });
+          if (p) {
+            p.stock = Math.max(0, p.stock - diff);
             await p.save();
           }
         }
