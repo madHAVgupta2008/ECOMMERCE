@@ -220,9 +220,15 @@
 
     .filter-chips {
       display: flex;
-      flex-wrap: wrap;
+      overflow-x: auto;
       gap: 8px;
-      padding-bottom: 2px
+      padding-bottom: 8px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    
+    .filter-chips::-webkit-scrollbar {
+      display: none;
     }
 
     .chip {
@@ -2757,6 +2763,26 @@
     .shipping-progress-fill.success {
       background: var(--leaf);
     }
+    
+    @keyframes pulseHint {
+      0% { opacity: 0.4; transform: translateX(0); }
+      50% { opacity: 1; transform: translateX(4px); }
+      100% { opacity: 0.4; transform: translateX(0); }
+    }
+    .scroll-hint {
+      display: none;
+      justify-content: flex-end;
+      padding: 0 4px 6px 0;
+      font-size: 0.78rem;
+      color: #a08060;
+      font-weight: 700;
+      animation: pulseHint 2s infinite;
+    }
+    @media(max-width: 700px) {
+      .scroll-hint {
+        display: flex;
+      }
+    }
   </style>
 </head>
 
@@ -2784,6 +2810,8 @@
     <div class="store-controls">
       <input class="search-box" type="text" placeholder="🔍 Search rakhis..." oninput="filterProducts()"
         id="searchInput">
+      
+      <div class="scroll-hint">Swipe categories <span style="font-size:1rem; vertical-align:middle; margin-left:3px;">➔</span></div>
       <div class="filter-chips" id="filterChips"></div>
       
       <div class="advanced-filters" style="display:flex; gap:12px; margin: 0 16px 16px 16px; flex-wrap:wrap; justify-content:center; align-items:center;">
