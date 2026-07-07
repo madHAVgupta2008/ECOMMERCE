@@ -226,23 +226,32 @@
     }
 
     .chip {
-      padding: 8px 16px;
+      padding: 10px 22px;
       border-radius: 50px;
-      border: 2px solid #d4b483;
+      border: 1px solid #f0e6d2;
       cursor: pointer;
-      font-size: .82rem;
-      font-weight: 600;
+      font-size: .85rem;
+      font-weight: 700;
       color: var(--bark);
       background: #fff;
-      transition: all .2s;
-      white-space: nowrap
+      transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1);
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(92, 58, 30, 0.05);
     }
 
-    .chip.active,
     .chip:hover {
-      background: var(--saffron);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(92, 58, 30, 0.12);
+      border-color: #d4b483;
+      color: var(--saffron);
+    }
+
+    .chip.active {
+      background: linear-gradient(135deg, var(--saffron), var(--deep-red));
       color: #fff;
-      border-color: var(--saffron)
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(232, 96, 28, 0.3);
+      transform: translateY(-2px);
     }
 
     /* PRODUCT QUICK-VIEW POPUP */
@@ -2783,11 +2792,6 @@
           <option value="price-low">Price: Low to High</option>
           <option value="price-high">Price: High to Low</option>
         </select>
-        <div style="display:flex; align-items:center; gap:8px; background:#fff; padding:6px 14px; border-radius:10px; border:2px solid #d4b483;">
-           <span style="font-size:.82rem; color:var(--bark); font-weight:600;">Max Price:</span>
-           <input type="range" id="priceFilter" min="50" max="2500" step="50" value="2500" oninput="document.getElementById('priceVal').textContent='₹'+this.value; filterProducts()" style="accent-color:var(--saffron); cursor:pointer;">
-           <span id="priceVal" style="font-size:.85rem; font-weight:800; color:var(--deep-red); width:45px;">₹2500</span>
-        </div>
       </div>
     </div>
     <div class="product-grid" id="productGrid">
@@ -3410,9 +3414,10 @@
 
     function renderCategoryChips() {
       const cats = ['All', ...new Set(allProducts.map(p => p.category))];
-      document.getElementById('filterChips').innerHTML = cats.map(c =>
-        `<div class="chip ${c === currentCategory ? 'active' : ''}" onclick="setCategory('${c}')">${c}</div>`
-      ).join('');
+      document.getElementById('filterChips').innerHTML = cats.map(c => {
+        const titleCase = c.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        return `<div class="chip ${c === currentCategory ? 'active' : ''}" onclick="setCategory('${c}')">${titleCase}</div>`;
+      }).join('');
     }
 
     function setCategory(cat) { currentCategory = cat; renderCategoryChips(); filterProducts(); }
@@ -3422,10 +3427,6 @@
       let list = [...allProducts]; // already shuffled once at load
       if (currentCategory !== 'All') list = list.filter(p => p.category === currentCategory);
       if (q) list = list.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
-      
-      // Price Filter
-      const maxPrice = parseInt(document.getElementById('priceFilter')?.value || 2500, 10);
-      list = list.filter(p => p.price <= maxPrice);
       
       // Sort Filter
       const sort = document.getElementById('sortFilter')?.value || 'default';
