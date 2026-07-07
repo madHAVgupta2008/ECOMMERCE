@@ -1769,7 +1769,15 @@
       }
 
       .filter-chips {
-        width: 100%
+        width: 100%;
+        gap: 6px;
+        padding-bottom: 0;
+      }
+
+      .chip {
+        padding: 5px 10px;
+        font-size: 0.72rem;
+        border-radius: 20px;
       }
 
       .admin-sidebar {
@@ -2767,14 +2775,6 @@
     </div>
     <div class="store-controls">
       <div class="filter-chips" id="filterChips"></div>
-      
-      <div class="advanced-filters" style="display:flex; gap:12px; margin: 16px; justify-content:center; align-items:center;">
-        <select id="sortFilter" onchange="filterProducts()" style="padding:8px 12px; border-radius:10px; border:2px solid #d4b483; font-family:'Nunito',sans-serif; background:#fff; font-size:.85rem; outline:none; color:var(--bark); cursor:pointer;">
-          <option value="default">Sort by: Default</option>
-          <option value="price-low">Price: Low to High</option>
-          <option value="price-high">Price: High to Low</option>
-        </select>
-      </div>
     </div>
     <div class="product-grid" id="productGrid">
       <div class="loading-spinner">⏳ Loading rakhis…</div>
@@ -3407,14 +3407,6 @@
     function filterProducts() {
       let list = [...allProducts]; // already shuffled once at load
       if (currentCategory !== 'All') list = list.filter(p => p.category === currentCategory);
-      
-      // Sort Filter
-      const sort = document.getElementById('sortFilter')?.value || 'default';
-      if (sort === 'price-low') {
-        list.sort((a, b) => a.price - b.price);
-      } else if (sort === 'price-high') {
-        list.sort((a, b) => b.price - a.price);
-      }
       
       renderProductGrid(list);
     }
