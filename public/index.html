@@ -2243,7 +2243,7 @@
     /* CASH LEDGER */
     .ledger-summary {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
       margin-bottom: 28px;
     }
@@ -2388,9 +2388,109 @@
       font-weight: 700;
     }
 
+    .type-pending {
+      color: #b8720a;
+      font-weight: 700;
+    }
+
+    /* pending ledger row highlight */
+    .ledger-table tr.row-pending td {
+      background: #fff8e6;
+    }
+    .ledger-table tr.row-pending:hover td {
+      background: #fef0c0;
+    }
+
+    /* btn-warn for mark-paid */
+    .btn-warn {
+      background: #f0a500;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      transition: opacity .2s;
+      white-space: nowrap;
+    }
+    .btn-warn:hover { opacity: .85; }
+
+    /* Edit-order modal */
+    .edit-order-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 600;
+      align-items: center;
+      justify-content: center;
+    }
+    .edit-order-overlay.open { display: flex; }
+    .edit-order-box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 30px 28px;
+      max-width: 540px;
+      width: 94%;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+    .edit-order-box h3 {
+      font-family: 'Playfair Display', serif;
+      color: var(--bark);
+      font-size: 1.3rem;
+      margin-bottom: 18px;
+    }
+    .edit-order-box .form-row { margin-bottom: 13px; }
+    .edit-order-box .form-row label { display:block;font-weight:700;font-size:.83rem;color:var(--bark);margin-bottom:4px; }
+    .edit-order-box .form-row input,
+    .edit-order-box .form-row textarea {
+      width:100%;
+      padding:10px 13px;
+      border:2px solid #d4b483;
+      border-radius:10px;
+      font-family:'Nunito',sans-serif;
+      font-size:.93rem;
+      outline:none;
+      background:var(--cream);
+      color:var(--text-dark);
+      transition:border-color .2s;
+      resize:vertical;
+    }
+    .edit-order-box .form-row input:focus,
+    .edit-order-box .form-row textarea:focus { border-color:var(--saffron); }
+    .edit-order-items-grid {
+      display:grid;
+      grid-template-columns:1fr auto auto;
+      gap:6px 10px;
+      align-items:center;
+      margin-bottom:14px;
+    }
+    .edit-order-item-name { font-size:.88rem;color:var(--bark);font-weight:600;grid-column:1; }
+    .edit-order-qty-inp {
+      width:70px;
+      padding:7px 10px;
+      border:2px solid #d4b483;
+      border-radius:8px;
+      font-family:'Nunito',sans-serif;
+      font-size:.9rem;
+      text-align:center;
+      outline:none;
+      background:#fff;
+      color:var(--text-dark);
+    }
+    .edit-order-btn-row {
+      display:flex;
+      gap:10px;
+      margin-top:20px;
+    }
+
     @media(max-width:700px) {
       .ledger-summary {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
       }
 
       .ol-form-grid {
@@ -2398,6 +2498,11 @@
       }
 
       .ledger-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media(max-width:480px) {
+      .ledger-summary {
         grid-template-columns: 1fr;
       }
     }
@@ -2828,6 +2933,11 @@
               <div class="lc-val" id="lc-net-pl">₹0</div>
               <div class="lc-label" id="lc-pl-label">Net Profit</div>
             </div>
+            <div class="ledger-card" style="border-color:#f0a500">
+              <div class="lc-icon">⏳</div>
+              <div class="lc-val" id="lc-total-pending" style="color:#b8720a">₹0</div>
+              <div class="lc-label">Pending Payments</div>
+            </div>
           </div>
 
           <div class="ledger-form">
@@ -2839,6 +2949,7 @@
                   <option value="">Select type</option>
                   <option value="income">📈 Income</option>
                   <option value="expense">📉 Expense</option>
+                  <option value="pending">⏳ Pending Payment</option>
                 </select>
               </div>
               <div>
@@ -2863,6 +2974,18 @@
             <div class="loading-spinner">⏳ Loading entries…</div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT ORDER MODAL (Admin only) -->
+  <div class="edit-order-overlay" id="editOrderOverlay">
+    <div class="edit-order-box" id="editOrderBox">
+      <h3>✏️ Edit Order</h3>
+      <div id="editOrderForm"></div>
+      <div class="edit-order-btn-row">
+        <button class="btn-primary" id="saveOrderEditBtn" onclick="saveOrderEdit()">💾 Save Changes</button>
+        <button class="btn-secondary" onclick="closeEditOrder()">Cancel</button>
       </div>
     </div>
   </div>
@@ -3898,6 +4021,131 @@ Total: ₹${order.total}`;
       }
     }
 
+    // ─── EDIT ORDER (Admin only) ──────────────────────────────────────────────
+    let _editOrderData = null; // holds the order being edited
+
+    function openEditOrder(order) {
+      _editOrderData = JSON.parse(JSON.stringify(order)); // deep copy
+      // Track which items have been removed in the modal
+      _editOrderData._removedIds = [];
+      const form = document.getElementById('editOrderForm');
+      form.innerHTML = `
+        <div class="form-row">
+          <label>Customer Name</label>
+          <input type="text" id="eo-name" value="${escHtml(order.name)}">
+        </div>
+        <div class="form-row">
+          <label>Phone</label>
+          <input type="tel" id="eo-phone" value="${escHtml(order.phone)}">
+        </div>
+        <div class="form-row">
+          <label>Delivery Address</label>
+          <textarea id="eo-address" rows="2">${escHtml(order.address)}</textarea>
+        </div>
+        <div class="form-row">
+          <label>Special Notes</label>
+          <input type="text" id="eo-notes" value="${escHtml(order.notes || '')}">
+        </div>
+        <div style="margin-bottom:8px;font-weight:700;font-size:.85rem;color:var(--bark)">Items
+          <span style="font-size:.75rem;font-weight:400;color:#a08060"> — set qty to 0 or click ✖ to mark as returned</span>
+        </div>
+        <div class="edit-order-items-grid" id="eoItemsGrid">
+          ${order.items.map(i => `
+            <div class="edit-order-item-name" id="eo-row-${i.id}">
+              ${escHtml(i.name)}
+              <span style="font-size:.75rem;color:#a08060">[${i.itemCode || 'N/A'}] &middot; ₹${i.price} each</span>
+            </div>
+            <input class="edit-order-qty-inp" type="number" min="0" value="${i.qty}" id="eo-qty-${i.id}" onwheel="this.blur()" oninput="eoQtyChange('${i.id}', this.value)">
+            <button type="button" class="btn-delete" title="Mark as returned" id="eo-remove-${i.id}" onclick="eoRemoveItem('${i.id}')" style="padding:5px 9px;font-size:.85rem">✖</button>
+          `).join('')}
+        </div>
+        <div id="eoRemovedNotice" style="display:none;padding:8px 12px;background:#fff3cd;border-radius:8px;font-size:.82rem;color:#856404;margin-bottom:10px">
+          ⚠️ Removed items will be marked as returned. Stock is restored automatically for Delivered orders.
+        </div>
+      `;
+      document.getElementById('editOrderOverlay').classList.add('open');
+    }
+
+    function eoQtyChange(itemId, val) {
+      const qty = parseInt(val, 10);
+      const row = document.getElementById('eo-row-' + itemId);
+      if (qty === 0 && row) {
+        row.style.textDecoration = 'line-through';
+        row.style.opacity = '0.45';
+        document.getElementById('eoRemovedNotice').style.display = 'block';
+      } else if (row) {
+        row.style.textDecoration = '';
+        row.style.opacity = '';
+        // Check if any are still at 0
+        const anyZero = _editOrderData.items.some(i => {
+          const inp = document.getElementById('eo-qty-' + i.id);
+          return inp && parseInt(inp.value, 10) === 0;
+        });
+        if (!anyZero) document.getElementById('eoRemovedNotice').style.display = 'none';
+      }
+    }
+
+    function eoRemoveItem(itemId) {
+      const qtyInp = document.getElementById('eo-qty-' + itemId);
+      if (qtyInp) { qtyInp.value = '0'; eoQtyChange(itemId, '0'); }
+    }
+
+    function closeEditOrder() {
+      document.getElementById('editOrderOverlay').classList.remove('open');
+      _editOrderData = null;
+    }
+
+    async function saveOrderEdit() {
+      if (!_editOrderData) return;
+      const o = _editOrderData;
+      const btn = document.getElementById('saveOrderEditBtn');
+      btn.disabled = true; btn.textContent = '⏳ Saving…';
+
+      const name    = document.getElementById('eo-name').value.trim();
+      const phone   = document.getElementById('eo-phone').value.trim();
+      const address = document.getElementById('eo-address').value.trim();
+      const notes   = document.getElementById('eo-notes').value.trim();
+
+      if (!name || !phone || !address) {
+        showToast('⚠️ Name, phone and address are required');
+        btn.disabled = false; btn.textContent = '💾 Save Changes';
+        return;
+      }
+
+      // Build items — qty=0 signals a returned/removed item to the server
+      const items = o.items.map(i => ({
+        id: i.id,
+        qty: parseInt(document.getElementById('eo-qty-' + i.id)?.value ?? i.qty, 10) || 0
+      }));
+
+      const activeItems = items.filter(i => i.qty > 0);
+      if (activeItems.length === 0) {
+        showToast('⚠️ At least one item must remain in the order');
+        btn.disabled = false; btn.textContent = '💾 Save Changes';
+        return;
+      }
+
+      const removedCount = items.filter(i => i.qty === 0).length;
+      if (removedCount > 0) {
+        const ok = confirm(`This will mark ${removedCount} item(s) as returned and restore stock for Delivered orders. Proceed?`);
+        if (!ok) { btn.disabled = false; btn.textContent = '💾 Save Changes'; return; }
+      }
+
+      try {
+        const res = await api.adminPut(`/api/orders/${o.id}`, { name, phone, address, notes, items });
+        if (res.error) { showToast('❌ ' + res.error); btn.disabled = false; btn.textContent = '💾 Save Changes'; return; }
+        showToast('✅ Order updated!');
+        closeEditOrder();
+        loadOrders();
+        loadRecentOrders();
+        loadStats();
+        await loadProducts(); filterProducts(); loadAdminProducts();
+      } catch (e) {
+        showToast('❌ Failed to save');
+      }
+      btn.disabled = false; btn.textContent = '💾 Save Changes';
+    }
+
     // ─── OFFLINE SALES ────────────────────────────────────────────────────────
     // Cart holds items to be saved in one sale
     let olCart = []; // [{ itemCode, itemName, qty, unitPrice, lineTotal, isCustom }]
@@ -4201,17 +4449,19 @@ Total: ₹${order.total}`;
       try {
         const entries = await api.adminGet('/api/cash-entries');
         // Compute summary
-        let totalIncome = 0, totalExpense = 0;
+        let totalIncome = 0, totalExpense = 0, totalPending = 0;
         if (Array.isArray(entries)) {
           entries.forEach(e => {
             if (e.type === 'income') totalIncome += e.amount;
-            else totalExpense += e.amount;
+            else if (e.type === 'expense') totalExpense += e.amount;
+            else if (e.type === 'pending') totalPending += e.amount;
           });
         }
         const netPL = totalIncome - totalExpense;
         document.getElementById('lc-total-income').textContent = '₹' + totalIncome.toLocaleString('en-IN');
         document.getElementById('lc-total-expense').textContent = '₹' + totalExpense.toLocaleString('en-IN');
         document.getElementById('lc-net-pl').textContent = (netPL < 0 ? '-₹' : '₹') + Math.abs(netPL).toLocaleString('en-IN');
+        document.getElementById('lc-total-pending').textContent = '₹' + totalPending.toLocaleString('en-IN');
         const profitCard = document.getElementById('ledger-profit-card');
         const plLabel = document.getElementById('lc-pl-label');
         if (netPL < 0) {
@@ -4228,13 +4478,20 @@ Total: ₹${order.total}`;
         wrap.innerHTML = `<table class="ledger-table">
           <thead><tr><th>Date</th><th>Type</th><th>Amount (₹)</th><th>Description</th><th>Action</th></tr></thead>
           <tbody>
-            ${entries.map(e => `<tr>
-              <td style="white-space:nowrap">${e.date}</td>
-              <td><span class="type-${e.type}">${e.type === 'income' ? '📈 Income' : '📉 Expense'}</span></td>
-              <td><strong>₹${e.amount.toLocaleString('en-IN')}</strong></td>
-              <td style="font-size:.85rem;color:#7a5c3a">${escHtml(e.description || '—')}</td>
-              <td><button class="btn-delete" onclick="deleteCashEntry('${e._id}')">🗑</button></td>
-            </tr>`).join('')}
+            ${entries.map(e => {
+              const isPending = e.type === 'pending';
+              const typeLabel = e.type === 'income' ? '📈 Income' : e.type === 'expense' ? '📉 Expense' : '⏳ Pending';
+              const markPaidBtn = isPending
+                ? `<button class="btn-warn" onclick="markCashEntryPaid('${e._id}')">✅ Mark Paid</button>&nbsp;`
+                : '';
+              return `<tr class="${isPending ? 'row-pending' : ''}">
+                <td style="white-space:nowrap">${e.date}</td>
+                <td><span class="type-${e.type}">${typeLabel}</span>${isPending && e.description ? '' : ''}</td>
+                <td><strong>₹${e.amount.toLocaleString('en-IN')}</strong></td>
+                <td style="font-size:.85rem;color:#7a5c3a">${escHtml(e.description || '—')}</td>
+                <td style="white-space:nowrap">${markPaidBtn}<button class="btn-delete" onclick="deleteCashEntry('${e._id}')">🗑</button></td>
+              </tr>`;
+            }).join('')}
           </tbody>
         </table>`;
       } catch (err) { wrap.innerHTML = '<p style="padding:20px;color:#a08060">Could not load entries</p>'; }
@@ -4267,6 +4524,16 @@ Total: ₹${order.total}`;
         showToast('🗑️ Entry deleted');
         loadCashLedger();
       } catch (e) { showToast('❌ Failed to delete'); }
+    }
+
+    async function markCashEntryPaid(id) {
+      if (!confirm('Mark this pending payment as received (Income)?')) return;
+      try {
+        const res = await api.adminPatch(`/api/cash-entries/${id}/mark-paid`, {});
+        if (res.error) { showToast('❌ ' + res.error); return; }
+        showToast('✅ Payment marked as received!');
+        loadCashLedger();
+      } catch (e) { showToast('❌ Failed to mark as paid'); }
     }
 
     // ─── MY ORDERS LOOKUP ──────────────────────────────────────────────────────

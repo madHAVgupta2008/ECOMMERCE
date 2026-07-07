@@ -548,6 +548,83 @@ app.patch('/api/orders/:id/status', requireAdmin, async (req, res) => {
   }
 });
 
+// PUT edit order details — ADMIN ONLY
+app.put('/api/orders/:id', requireAdmin, async (req, res) => {
+  try {
+    const order = await Order.findOne({ id: req.params.id });
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    const { name, phone, email, address, notes, items } = req.body;
+
+    if (name && name.trim()) order.name = name.trim();
+    if (phone && phone.trim()) order.phone = phone.trim();
+    if (email !== undefined) order.email = email || '';
+    if (address && address.trim()) order.address = address.trim();
+    if (notes !== undefined) order.notes = notes || '';
+
+    // Update items — supports qty changes AND item removal (return processing)
+    if (Array.isArray(items)) {
+      if (items.length === 0) {
+        return res.status(400).json({ error: 'Order must have at least one item' });
+      }
+
+      let newTotal = 0;
+      const updatedItems = [];
+
+      for (const incoming of items) {
+        const existing = order.items.find(i => i.id === incoming.id);
+        if (!existing) continue; // ignore unknown product IDs
+
+        const qty = parseInt(incoming.qty, 10);
+        if (!Number.isInteger(qty) || qty < 0) {
+          return res.status(400).json({ error: `Invalid quantity for item ${incoming.id}` });
+        }
+
+        // qty === 0 means the item was returned/removed — skip adding it
+        if (qty === 0) {
+          // If order was Delivered, restore stock for the removed item
+          if (order.status === 'Delivered') {
+            const p = await Product.findOne({ id: existing.id });
+            if (p) {
+              p.stock += existing.qty; // restore original qty
+              await p.save();
+            }
+          }
+          continue; // don't include this item in updatedItems
+        }
+
+        // If order was Delivered and qty decreased, restore difference to stock
+        if (order.status === 'Delivered' && qty < existing.qty) {
+          const diff = existing.qty - qty;
+          const p = await Product.findOne({ id: existing.id });
+          if (p) {
+            p.stock += diff;
+            await p.save();
+          }
+        }
+
+        updatedItems.push({ ...existing.toObject(), qty });
+        newTotal += existing.price * qty;
+      }
+
+      if (updatedItems.length === 0) {
+        return res.status(400).json({ error: 'Order must have at least one item remaining' });
+      }
+
+      order.items = updatedItems;
+      order.total = Math.round(newTotal * 100) / 100;
+    }
+
+    order.updatedAt = new Date().toISOString();
+    await order.save();
+    res.json(order);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update order' });
+  }
+});
+
+
 // DELETE order — ADMIN ONLY
 app.delete('/api/orders/:id', requireAdmin, async (req, res) => {
   try {
@@ -795,8 +872,8 @@ app.post('/api/cash-entries', requireAdmin, async (req, res) => {
     const { type, amount, description, date } = req.body;
     if (!type || !amount || !date)
       return res.status(400).json({ error: 'Missing required fields' });
-    if (!['income', 'expense'].includes(type))
-      return res.status(400).json({ error: 'Type must be income or expense' });
+    if (!['income', 'expense', 'pending'].includes(type))
+      return res.status(400).json({ error: 'Type must be income, expense, or pending' });
     const entry = await CashEntry.create({
       type,
       amount: Number(amount),
@@ -806,6 +883,21 @@ app.post('/api/cash-entries', requireAdmin, async (req, res) => {
     res.json(entry);
   } catch (err) {
     res.status(500).json({ error: 'Failed to record entry' });
+  }
+});
+
+// PATCH mark pending entry as paid — ADMIN ONLY
+app.patch('/api/cash-entries/:id/mark-paid', requireAdmin, async (req, res) => {
+  try {
+    const entry = await CashEntry.findById(req.params.id);
+    if (!entry) return res.status(404).json({ error: 'Entry not found' });
+    if (entry.type !== 'pending') return res.status(400).json({ error: 'Entry is not pending' });
+    entry.type = 'income';
+    entry.paidAt = new Date().toISOString();
+    await entry.save();
+    res.json(entry);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to mark entry as paid' });
   }
 });
 

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — RakhiRoots by Shree Shyam Crafts</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bark: #5c3a1e;
+      --gold: #c9872b;
+      --cream: #fdf6ec;
+      --deep-red: #8b1a1a;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a0a00 0%, #3d1a00 50%, #1a0a00 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Nunito', sans-serif;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: rgba(253, 246, 236, 0.97);
+      border-radius: 20px;
+      padding: 48px 44px 40px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 24px 80px rgba(0,0,0,.5);
+      text-align: center;
+    }
+
+    .login-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--bark);
+      margin-bottom: 4px;
+    }
+    .login-logo span { color: var(--gold); }
+
+    .login-subtitle {
+      font-size: .82rem;
+      color: #a08060;
+      margin-bottom: 32px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      font-size: .82rem;
+      color: var(--bark);
+      text-align: left;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 13px 16px;
+      border: 2px solid #d4b483;
+      border-radius: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      background: #fff;
+      color: var(--bark);
+      outline: none;
+      margin-bottom: 18px;
+      transition: border-color .2s;
+    }
+    input:focus { border-color: var(--gold); }
+
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--bark) 0%, #8b4513 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s;
+      margin-top: 4px;
+      letter-spacing: .02em;
+    }
+    .btn-login:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-login:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    .error-msg {
+      display: none;
+      background: #fff0f0;
+      border: 1.5px solid #e74c3c;
+      border-radius: 8px;
+      color: #c0392b;
+      font-size: .88rem;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .back-link {
+      display: block;
+      margin-top: 22px;
+      font-size: .82rem;
+      color: #a08060;
+      text-decoration: none;
+    }
+    .back-link:hover { color: var(--bark); }
+
+    .lock-icon {
+      font-size: 2.5rem;
+      margin-bottom: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="lock-icon">🔐</div>
+    <div class="login-logo">Rakhi<span>Roots</span></div>
+    <div class="login-subtitle">Admin Panel · Shree Shyam Crafts</div>
+
+    <div class="error-msg" id="loginError"></div>
+
+    <label for="adminUser">Username</label>
+    <input type="text" id="adminUser" placeholder="Enter username" autocomplete="username" autofocus>
+
+    <label for="adminPass">Password</label>
+    <input type="password" id="adminPass" placeholder="Enter password" autocomplete="current-password">
+
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">🔓 Login to Admin Panel</button>
+
+    <a href="/" class="back-link">← Back to Shop</a>
+  </div>
+
+  <script>
+    async function doLogin() {
+      const username = document.getElementById('adminUser').value.trim();
+      const password = document.getElementById('adminPass').value;
+      const errEl   = document.getElementById('loginError');
+      const btn     = document.getElementById('loginBtn');
+
+      if (!username || !password) {
+        errEl.textContent = 'Please enter username and password.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Logging in…';
+      errEl.style.display = 'none';
+
+      try {
+        const res  = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',               // ← allows cookie to be set
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          errEl.textContent = data.error || 'Invalid credentials. Please try again.';
+          errEl.style.display = 'block';
+          document.getElementById('adminPass').value = '';
+          btn.disabled = false;
+          btn.textContent = '🔓 Login to Admin Panel';
+          return;
+        }
+
+        // Cookie is set by server (HttpOnly — JS cannot read it)
+        // Redirect to the protected admin panel
+        window.location.href = '/admin-panel';
+
+      } catch (e) {
+        errEl.textContent = 'Connection error. Please try again.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = '🔓 Login to Admin Panel';
+      }
+    }
+
+    // Enter key triggers login
+    ['adminUser', 'adminPass'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') doLogin();
+      });
+    });
+  </script>
+</body>
+</html>
