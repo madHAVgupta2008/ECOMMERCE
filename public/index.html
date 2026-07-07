@@ -201,34 +201,12 @@
       border-bottom: 2px solid #e8d2b0
     }
 
-    .search-box {
-      width: 100%;
-      padding: 12px 20px;
-      border: 2px solid #d4b483;
-      border-radius: 50px;
-      font-size: 1rem;
-      font-family: 'Nunito', sans-serif;
-      background: #fff;
-      outline: none;
-      transition: border-color .2s;
-      -webkit-appearance: none
-    }
-
-    .search-box:focus {
-      border-color: var(--saffron)
-    }
-
     .filter-chips {
       display: flex;
-      overflow-x: auto;
+      flex-wrap: wrap;
       gap: 8px;
-      padding-bottom: 8px;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-    
-    .filter-chips::-webkit-scrollbar {
-      display: none;
+      padding-bottom: 2px;
+      justify-content: center;
     }
 
     .chip {
@@ -2763,26 +2741,6 @@
     .shipping-progress-fill.success {
       background: var(--leaf);
     }
-    
-    @keyframes pulseHint {
-      0% { opacity: 0.4; transform: translateX(0); }
-      50% { opacity: 1; transform: translateX(4px); }
-      100% { opacity: 0.4; transform: translateX(0); }
-    }
-    .scroll-hint {
-      display: none;
-      justify-content: flex-end;
-      padding: 0 4px 6px 0;
-      font-size: 0.78rem;
-      color: #a08060;
-      font-weight: 700;
-      animation: pulseHint 2s infinite;
-    }
-    @media(max-width: 700px) {
-      .scroll-hint {
-        display: flex;
-      }
-    }
   </style>
 </head>
 
@@ -2808,13 +2766,9 @@
       <p>Handcrafted Rakhis for every brother's wrist • Free delivery above ₹999</p>
     </div>
     <div class="store-controls">
-      <input class="search-box" type="text" placeholder="🔍 Search rakhis..." oninput="filterProducts()"
-        id="searchInput">
-      
-      <div class="scroll-hint">Swipe categories <span style="font-size:1rem; vertical-align:middle; margin-left:3px;">➔</span></div>
       <div class="filter-chips" id="filterChips"></div>
       
-      <div class="advanced-filters" style="display:flex; gap:12px; margin: 0 16px 16px 16px; justify-content:flex-end; align-items:center;">
+      <div class="advanced-filters" style="display:flex; gap:12px; margin: 16px; justify-content:center; align-items:center;">
         <select id="sortFilter" onchange="filterProducts()" style="padding:8px 12px; border-radius:10px; border:2px solid #d4b483; font-family:'Nunito',sans-serif; background:#fff; font-size:.85rem; outline:none; color:var(--bark); cursor:pointer;">
           <option value="default">Sort by: Default</option>
           <option value="price-low">Price: Low to High</option>
@@ -3451,10 +3405,8 @@
     function setCategory(cat) { currentCategory = cat; renderCategoryChips(); filterProducts(); }
 
     function filterProducts() {
-      const q = (document.getElementById('searchInput').value || '').toLowerCase();
       let list = [...allProducts]; // already shuffled once at load
       if (currentCategory !== 'All') list = list.filter(p => p.category === currentCategory);
-      if (q) list = list.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
       
       // Sort Filter
       const sort = document.getElementById('sortFilter')?.value || 'default';
