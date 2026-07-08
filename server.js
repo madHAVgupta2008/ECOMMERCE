@@ -162,7 +162,7 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
 
     // Validate payment method against allowed values
-    const ALLOWED_PAYMENTS = ['UPI / QR Code', 'COD', 'Online', 'Bank Transfer'];
+    const ALLOWED_PAYMENTS = ['UPI / QR Code'];
     if (!ALLOWED_PAYMENTS.includes(payment)) {
       return res.status(400).json({ error: `Invalid payment method.` });
     }
