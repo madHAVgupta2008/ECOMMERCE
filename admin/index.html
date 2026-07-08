@@ -134,6 +134,55 @@
       color: var(--bark); cursor: pointer;
     }
 
+    /* Admin order items chips */
+    .order-item-chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--cream);
+      border: 1px solid #eddcc0;
+      border-radius: 8px;
+      padding: 5px 9px;
+      margin-bottom: 5px;
+      font-size: .8rem;
+      line-height: 1.3;
+    }
+    .order-item-chip:last-child { margin-bottom: 0; }
+    .order-item-code {
+      font-family: 'Courier New', monospace;
+      font-size: .72rem;
+      font-weight: 700;
+      background: #5c3a1e;
+      color: #f5dbb7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .order-item-name {
+      flex: 1;
+      color: var(--text-dark);
+      font-weight: 600;
+      word-break: break-word;
+    }
+    .order-item-qty {
+      background: #e8601c;
+      color: #fff;
+      font-size: .72rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 50px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .order-item-price {
+      color: #27ae60;
+      font-weight: 700;
+      font-size: .78rem;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
     /* ── ADMIN PRODUCTS ── */
     .admin-products-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;
@@ -640,8 +689,19 @@
       <tr>
         <td><strong>#${o.id}</strong></td>
         <td><div style="font-weight:700">${o.name}</div><div style="font-size:.8rem;color:#7a5c3a">${o.phone}</div><div style="font-size:.78rem;color:#a08060;max-width:160px;word-break:break-word">${o.address}</div>${o.notes ? `<div style="font-size:.78rem;color:#888;font-style:italic">📝 ${o.notes}</div>` : ''}</td>
-        <td>${o.items.map(i => `<div style="font-size:.82rem">${i.name} [${i.itemCode||'N/A'}] ×${i.qty}</div>`).join('')}</td>
-        <td><strong>₹${o.total}</strong></td>
+        <td>
+          <div style="min-width:160px">
+            ${o.items.map(i => `
+              <div class="order-item-chip">
+                <span class="order-item-code">${i.itemCode || 'N/A'}</span>
+                <span class="order-item-name">${i.name}</span>
+                <span class="order-item-qty">×${i.qty}</span>
+                ${i.price ? `<span class="order-item-price">₹${(i.price * i.qty).toLocaleString('en-IN')}</span>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </td>
+        <td><strong>₹${Number(o.total || 0).toLocaleString('en-IN')}</strong></td>
         <td style="font-size:.82rem;white-space:nowrap">${o.date}</td>
         <td style="font-size:.82rem">${o.payment}</td>
         <td><select class="status-select" onchange="updateOrderStatus('${o.id}',this.value)">${['New','Processing','Dispatched','Delivered','Cancelled'].map(s=>`<option value="${s}"${o.status===s?' selected':''}>${s}</option>`).join('')}</select></td>
