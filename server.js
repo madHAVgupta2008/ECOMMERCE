@@ -188,9 +188,16 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
       });
     }
 
-    // Generate order ID: full timestamp + 4 random digits to prevent collisions
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const orderId = 'RR' + Date.now() + randomSuffix;
+    // Generate order ID: RR + 6 random digits. Loop to guarantee it's unique and no collisions occur.
+    let orderId;
+    let isUnique = false;
+    while (!isUnique) {
+      orderId = 'RR' + Math.floor(100000 + Math.random() * 900000);
+      const existing = await Order.findOne({ id: orderId });
+      if (!existing) {
+        isUnique = true;
+      }
+    }
     const order = await Order.create({
       id: orderId,
       name,
