@@ -156,7 +156,7 @@
       errEl.style.display = 'none';
 
       try {
-        const res  = await fetch('/api/admin/login', {
+        const res  = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',               // ← allows cookie to be set
@@ -175,7 +175,7 @@
 
         // Cookie is set by server (HttpOnly — JS cannot read it)
         // Redirect to the protected admin panel
-        window.location.href = '/admin-panel';
+        window.location.href = '/dashboard';
 
       } catch (e) {
         errEl.textContent = 'Connection error. Please try again.';
