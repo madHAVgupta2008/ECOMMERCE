@@ -2749,6 +2749,73 @@
     .shipping-progress-fill.success {
       background: var(--leaf);
     }
+    
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .footer-links a {
+      color: #c8a878;
+      text-decoration: none;
+      font-size: .85rem;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover {
+      color: var(--saffron);
+      text-decoration: underline;
+    }
+    .footer-payment-methods {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(253, 246, 236, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .footer-payment-methods span {
+      font-size: .85rem;
+      color: #c8a878;
+    }
+    .payment-icons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .payment-badge {
+      background: #fff;
+      color: var(--bark);
+      font-weight: 700;
+      font-size: .75rem;
+      padding: 6px 12px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .legal-modal-content {
+      max-height: 60vh;
+      overflow-y: auto;
+      text-align: left;
+      font-size: .9rem;
+      color: var(--text-dark);
+      line-height: 1.6;
+      padding: 10px;
+    }
+    .legal-modal-content h3 {
+      font-family: 'Playfair Display', serif;
+      color: var(--bark);
+      margin-top: 20px;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+    .legal-modal-content p, .legal-modal-content ul {
+      margin-bottom: 15px;
+    }
+    .legal-modal-content ul {
+      padding-left: 20px;
+    }
   </style>
 </head>
 
@@ -2806,10 +2873,20 @@
             </div>
           </div>
           <div class="footer-col">
-            <h4>📦 Quick Info</h4>
-            <p>✅ Free delivery above ₹999</p>
-            <p>✅ 100% handcrafted</p>
-            <p>✅ Pan-India shipping</p>
+            <h4>⚖️ Legal & Policies</h4>
+            <div class="footer-links">
+              <a href="#" onclick="openLegalModal('privacy'); return false;">Privacy Policy</a>
+              <a href="#" onclick="openLegalModal('terms'); return false;">Terms & Conditions</a>
+              <a href="#" onclick="openLegalModal('returns'); return false;">Return & Refund Policy</a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-payment-methods">
+          <span>We Accept:</span>
+          <div class="payment-icons">
+            <span class="payment-badge">UPI / QR Code</span>
+            <span class="payment-badge">Cash on Delivery</span>
+            <span class="payment-badge">Bank Transfer</span>
           </div>
         </div>
         <div class="footer-bottom">
@@ -3182,6 +3259,17 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- LEGAL MODAL -->
+  <div class="modal-overlay" id="legalModal">
+    <div class="modal">
+      <h2 id="legalModalTitle" style="margin-bottom: 15px; font-family: 'Playfair Display', serif; color: var(--bark);"></h2>
+      <div class="legal-modal-content" id="legalModalBody"></div>
+      <div style="margin-top: 20px; text-align: center;">
+        <button class="checkout-btn" onclick="closeLegalModal()">Close</button>
+      </div>
+    </div>
+  </div>
 
   <!-- PRODUCT QUICK-VIEW POPUP -->
   <div class="pv-overlay" id="pvOverlay" onclick="closePvOnBg(event)">
@@ -5110,6 +5198,63 @@ Total: ₹${order.total}`;
         if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') submitAdminLogin(); });
       });
     });
+
+    // ─── LEGAL MODALS ─────────────────────────────────────────────────────────────
+    const legalTexts = {
+      privacy: {
+        title: "Privacy Policy",
+        body: `
+          <p>At Shree Shyam Crafts, we value your privacy and are committed to protecting your personal information.</p>
+          <h3>Information We Collect</h3>
+          <p>We collect information you provide directly to us when you make a purchase, such as your name, phone number, shipping address, and order details.</p>
+          <h3>How We Use Your Information</h3>
+          <p>We use this information strictly to process your orders, deliver products, and communicate with you about your purchase. We do not sell or share your information with third parties for marketing purposes.</p>
+          <h3>Data Security</h3>
+          <p>We implement standard security measures to protect your data. All transactions are securely processed.</p>
+          <h3>Contact Us</h3>
+          <p>If you have any questions about this Privacy Policy, please contact us at creativestar83@gmail.com.</p>
+        `
+      },
+      terms: {
+        title: "Terms & Conditions",
+        body: `
+          <p>Welcome to Shree Shyam Crafts. By using our website and placing an order, you agree to these Terms & Conditions.</p>
+          <h3>Order Acceptance</h3>
+          <p>All orders are subject to availability and acceptance. We reserve the right to refuse or cancel any order at any time.</p>
+          <h3>Pricing and Payments</h3>
+          <p>All prices are in Indian Rupees (INR). We accept payment via UPI, Bank Transfer, and Cash on Delivery (COD). Payment must be completed as agreed during checkout.</p>
+          <h3>Shipping</h3>
+          <p>We offer Pan-India shipping. Free delivery is available for orders above ₹999. Delivery times are estimates and may vary.</p>
+          <h3>Modifications</h3>
+          <p>We may update these terms at any time. Continued use of the site constitutes acceptance of the modified terms.</p>
+        `
+      },
+      returns: {
+        title: "Return & Refund Policy",
+        body: `
+          <p>Thank you for shopping at Shree Shyam Crafts. Please read our policy regarding returns and refunds carefully.</p>
+          <h3>Returns</h3>
+          <p>Due to the handcrafted and festive nature of our products (Rakhis), <strong>we do not accept returns or exchanges</strong> once the order has been delivered.</p>
+          <h3>Refunds</h3>
+          <p>Refunds are only issued if an item is damaged during transit or if we fail to fulfill your order. In such rare cases, please contact us within 24 hours of delivery with photographic evidence.</p>
+          <h3>Cancellations</h3>
+          <p>Orders can only be cancelled before they are dispatched. Once dispatched, cancellations are not permitted.</p>
+        `
+      }
+    };
+
+    function openLegalModal(type) {
+      const data = legalTexts[type];
+      if (data) {
+        document.getElementById('legalModalTitle').textContent = data.title;
+        document.getElementById('legalModalBody').innerHTML = data.body;
+        document.getElementById('legalModal').classList.add('open');
+      }
+    }
+
+    function closeLegalModal() {
+      document.getElementById('legalModal').classList.remove('open');
+    }
 
     init();
   </script>
