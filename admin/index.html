@@ -661,6 +661,7 @@
     let editingId = null;
     let olCart = [];
     let _olSelectedProduct = null;
+    let _ordersCache = {};  // id → order object, used by Edit button
 
     // ─── API (cookies sent automatically by browser) ────────────────────────────
     const api = {
@@ -764,6 +765,7 @@
       try {
         const data = await api.get('/api/orders?limit=5&page=1');
         const orders = Array.isArray(data) ? data : (data.orders || []);
+        orders.forEach(o => { _ordersCache[o.id] = o; });
         const wrap = document.getElementById('recentOrdersWrap');
         if (!orders.length) { wrap.innerHTML = `<div class="empty-state"><div class="big-icon">📦</div><h3>No orders yet</h3></div>`; return; }
         wrap.innerHTML = `<div style="overflow-x:auto">${buildOrderTableHTML(orders)}</div>`;
@@ -775,6 +777,7 @@
       try {
         const data = await api.get('/api/orders?limit=100&page=1');
         const orders = Array.isArray(data) ? data : (data.orders || []);
+        orders.forEach(o => { _ordersCache[o.id] = o; });
         const wrap = document.getElementById('ordersTableWrap');
         if (!orders.length) { wrap.innerHTML = `<div class="empty-state"><div class="big-icon">📦</div><h3>No orders yet</h3><p>Customer orders will appear here</p></div>`; return; }
         wrap.innerHTML = buildOrderTableHTML(orders);
@@ -804,7 +807,7 @@
         <td style="font-size:.82rem;white-space:nowrap">${o.date}</td>
         <td style="font-size:.82rem">${o.payment}</td>
         <td><select class="status-select" onchange="updateOrderStatus('${o.id}',this.value)">${['New', 'Processing', 'Dispatched', 'Pending Payment', 'Delivered', 'Cancelled'].map(s=>`<option value="${s}"${o.status===s?' selected':''}>${s}</option>`).join('')}</select></td>
-        <td style="white-space:nowrap"><button class="btn-edit" style="margin-bottom:5px" onclick="openEditOrderModal(${JSON.stringify(o)})">✏️ Edit</button><br><button class="btn-danger" onclick="deleteOrder('${o.id}')">🗑️ Delete</button></td>
+        <td style="white-space:nowrap"><button class="btn-edit" style="margin-bottom:5px" onclick="openEditOrderModal('${o.id}')">✏️ Edit</button><br><button class="btn-danger" onclick="deleteOrder('${o.id}')">🗑️ Delete</button></td>
       </tr>`).join('')}
     </tbody></table>`;
     }
@@ -831,7 +834,9 @@
     let _editOrderOriginal = [];  // snapshot at open — to detect removals
     let _eoSelectedProduct = null;
 
-    function openEditOrderModal(order) {
+    function openEditOrderModal(orderId) {
+      const order = _ordersCache[orderId];
+      if (!order) { showToast('❌ Order data not found. Please refresh.'); return; }
       document.getElementById('editOrderId').value = order.id;
       document.getElementById('editOrderIdLabel').textContent = '#' + order.id;
       document.getElementById('eoName').value    = order.name    || '';
