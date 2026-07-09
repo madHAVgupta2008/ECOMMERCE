@@ -606,6 +606,11 @@
         <div class="modal-form-row full"><label>Order Notes <small style="font-weight:400;color:#999">(optional)</small></label><input type="text" id="eoNotes" placeholder="Special instructions…"></div>
       </div>
 
+      <!-- Delivered order notice -->
+      <div id="eoDeliveredWarn" style="display:none;margin-top:14px;padding:10px 14px;background:#fff8e1;border:1.5px solid #ffe082;border-radius:10px;font-size:.83rem;color:#7a5c00;font-weight:600">
+        ⚠️ <strong>Delivered order:</strong> Adding or removing items will automatically adjust product stock.
+      </div>
+
       <!-- Items list -->
       <div style="margin-top:20px;margin-bottom:8px;font-weight:700;font-size:.9rem;color:var(--bark)">📦 Items</div>
       <table class="modal-items-table">
@@ -822,7 +827,8 @@
     }
 
     // ─── EDIT ORDER MODAL ────────────────────────────────────────────────────────
-    let _editOrderItems = [];
+    let _editOrderItems    = [];  // live working copy
+    let _editOrderOriginal = [];  // snapshot at open — to detect removals
     let _eoSelectedProduct = null;
 
     function openEditOrderModal(order) {
@@ -832,7 +838,11 @@
       document.getElementById('eoPhone').value   = order.phone   || '';
       document.getElementById('eoAddress').value = order.address || '';
       document.getElementById('eoNotes').value   = order.notes   || '';
-      _editOrderItems = order.items.map(i => ({ ...i }));
+      _editOrderItems    = order.items.map(i => ({ ...i }));
+      _editOrderOriginal = order.items.map(i => ({ ...i })); // keep original for diff
+      // show/hide delivered warning
+      const warn = document.getElementById('eoDeliveredWarn');
+      if (warn) warn.style.display = order.status === 'Delivered' ? 'block' : 'none';
       // reset add-product search
       _eoSelectedProduct = null;
       const srch = document.getElementById('eoAddSearch');
@@ -846,7 +856,8 @@
 
     function closeEditOrderModal() {
       document.getElementById('editOrderModal').classList.remove('open');
-      _editOrderItems = [];
+      _editOrderItems    = [];
+      _editOrderOriginal = [];
       _eoSelectedProduct = null;
     }
 
@@ -951,8 +962,20 @@
       const notes   = document.getElementById('eoNotes').value.trim();
       if (!name || !phone || !address) { showToast('⚠️ Name, phone and address are required'); return; }
       if (!_editOrderItems.length) { showToast('⚠️ Order must have at least one item'); return; }
-      // Build payload: existing items keep their id; send qty=0 means remove (server handles it)
-      const itemsPayload = _editOrderItems.map(i => ({ id: i.id, qty: i.qty }));
+
+      // Build payload:
+      // 1. All current items (with their updated qty)
+      // 2. Items that were in the original order but got removed → send as qty=0
+      //    so the server can restore stock for Delivered orders
+      const currentIds = new Set(_editOrderItems.map(i => i.id));
+      const removedItems = _editOrderOriginal
+        .filter(i => !currentIds.has(i.id))
+        .map(i => ({ id: i.id, qty: 0 }));
+      const itemsPayload = [
+        ..._editOrderItems.map(i => ({ id: i.id, qty: i.qty })),
+        ...removedItems,
+      ];
+
       const btn = document.getElementById('eoSaveBtn');
       btn.disabled = true; btn.textContent = '⏳ Saving…';
       try {
