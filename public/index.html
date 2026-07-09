@@ -3383,6 +3383,22 @@
     async function init() {
       await Promise.all([loadProducts(), loadCategories()]);
       allProducts = shuffleArray(allProducts); // shuffle once on load, order stays fixed for the session
+      
+      // Handle URL hash for Google Ads Sitelinks
+      if (window.location.hash) {
+        const hash = window.location.hash.substring(1);
+        if (['shop', 'my-orders'].includes(hash)) {
+          showPage(hash);
+        } else {
+          const catName = decodeURIComponent(hash).replace(/-/g, ' ');
+          const cats = ['All', ...new Set(allProducts.map(p => p.category))];
+          const matchedCat = cats.find(c => c.toLowerCase() === catName.toLowerCase());
+          if (matchedCat) {
+            currentCategory = matchedCat;
+          }
+        }
+      }
+
       renderCategoryChips();
       filterProducts();
       pollNewOrders();
