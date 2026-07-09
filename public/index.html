@@ -2856,7 +2856,7 @@
     </div>
 
     <!-- FOOTER -->
-    <footer class="site-footer">
+    <footer class="site-footer" id="contact">
       <div class="footer-inner">
         <div class="footer-brand">Shree Shyam<span> Crafts</span></div>
         <div class="footer-tagline">🪢 Sacred Threads, Beautiful Bonds — Handcrafted Rakhis for every wrist</div>
@@ -3389,6 +3389,12 @@
         const hash = window.location.hash.substring(1);
         if (['shop', 'my-orders'].includes(hash)) {
           showPage(hash);
+        } else if (hash === 'contact') {
+          showPage('shop');
+          setTimeout(() => {
+            const el = document.getElementById('contact');
+            if(el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 800);
         } else {
           const catName = decodeURIComponent(hash).replace(/-/g, ' ');
           const cats = ['All', ...new Set(allProducts.map(p => p.category))];
