@@ -423,7 +423,7 @@ app.patch('/api/orders/:id/status', requireAdmin, async (req, res) => {
 
     const oldStatus = order.status;
     const newStatus = req.body.status;
-    const ALLOWED = ['New', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+    const ALLOWED = ['New', 'Processing', 'Dispatched', 'Pending Payment', 'Delivered', 'Cancelled'];
     if (!ALLOWED.includes(newStatus)) {
       return res.status(400).json({ error: `Invalid status. Must be one of: ${ALLOWED.join(', ')}` });
     }
