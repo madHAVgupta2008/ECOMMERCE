@@ -3677,6 +3677,13 @@
       updateCartCount();
       if(!event) showToast(`✅ ${p.name}${color ? ' (' + color + ')' : ''} added!`);
       renderCartPanel();
+
+      // Event snippet for Add to basket conversion
+      gtag('event', 'conversion', {
+          'send_to': 'AW-18229383722/DGT0CPuC0s0cEKqkufRD',
+          'value': 1.0,
+          'currency': 'INR'
+      });
     }
     function updateCartCount() { document.getElementById('cartCount').textContent = cart.reduce((s, i) => s + i.qty, 0); }
     function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); renderCartPanel(); }
