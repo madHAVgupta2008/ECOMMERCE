@@ -3384,8 +3384,37 @@
       await Promise.all([loadProducts(), loadCategories()]);
       allProducts = shuffleArray(allProducts); // shuffle once on load, order stays fixed for the session
       
-      // Handle URL hash for Google Ads Sitelinks
-      if (window.location.hash) {
+      // Handle URL query parameters for Google Ads Sitelinks
+      const params = new URLSearchParams(window.location.search);
+      const pageParam = params.get('page');
+      const categoryParam = params.get('category');
+      
+      let handled = false;
+      if (pageParam) {
+        if (['shop', 'my-orders'].includes(pageParam)) {
+          showPage(pageParam);
+          handled = true;
+        } else if (pageParam === 'contact') {
+          showPage('shop');
+          setTimeout(() => {
+            const el = document.getElementById('contact');
+            if(el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 800);
+          handled = true;
+        }
+      }
+      if (categoryParam && !handled) {
+        const catName = categoryParam.replace(/-/g, ' ');
+        const cats = ['All', ...new Set(allProducts.map(p => p.category))];
+        const matchedCat = cats.find(c => c.toLowerCase() === catName.toLowerCase());
+        if (matchedCat) {
+          currentCategory = matchedCat;
+          handled = true;
+        }
+      }
+
+      // Fallback to hash routing for backwards compatibility
+      if (!handled && window.location.hash) {
         const hash = window.location.hash.substring(1);
         if (['shop', 'my-orders'].includes(hash)) {
           showPage(hash);
