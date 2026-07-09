@@ -2,6 +2,15 @@
 <html lang="en">
 
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-TV8JW5RTBE"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-TV8JW5RTBE');
+    gtag('config', 'AW-18229383722');
+  </script>
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -3858,6 +3867,16 @@ Total: ₹${order.total}`;
             localStorage.setItem('rr_tracked_orders', JSON.stringify(trackedList));
           }
         } catch (e) { }
+
+        // Google Ads Conversion Tracking (Purchase)
+        if (typeof gtag === 'function') {
+          gtag('event', 'conversion', {
+            'send_to': 'AW-18229383722/9xwCCKLG8cwcEKqkufRD',
+            'value': order.total,
+            'currency': 'INR',
+            'transaction_id': order.id
+          });
+        }
 
         // Render success screen immediately
         document.getElementById('checkoutModalContent').innerHTML = `
