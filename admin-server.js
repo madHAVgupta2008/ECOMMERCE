@@ -99,7 +99,7 @@ const authLimiter = rateLimit({
   message: { error: 'Too many login attempts. Please wait 15 minutes.' }
 });
 
-app.use('/api/', generalLimiter);
+// app.use('/api/', generalLimiter);
 
 // ── Auth Middlewares ────────────────────────────────────────────────────────
 
