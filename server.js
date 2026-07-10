@@ -169,15 +169,43 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
     // Validate stock and calculate total server-side
     let total = 0;
     const processedItems = [];
+    const decrementedItems = []; // Track decremented items for rollback
+
     for (const item of items) {
       // ── FIX #5: Validate qty is a positive integer ──────────────────────
       const qty = parseInt(item.qty, 10);
       if (!Number.isInteger(qty) || qty < 1) {
+        // Rollback already decremented items
+        for (const dec of decrementedItems) {
+          await Product.updateOne({ id: dec.id }, { $inc: { stock: dec.qty } });
+        }
         return res.status(400).json({ error: `Invalid quantity for item: ${item.id}. Quantity must be a positive whole number.` });
       }
-      const p = await Product.findOne({ id: item.id });
-      if (!p) return res.status(400).json({ error: `Product not found: ${item.id}` });
-      if (p.stock < qty) return res.status(400).json({ error: `Insufficient stock for: ${p.name}` });
+
+      // Atomically check stock and decrement
+      const p = await Product.findOneAndUpdate(
+        { id: item.id, stock: { $gte: qty } },
+        { $inc: { stock: -qty } },
+        { new: true }
+      );
+
+      if (!p) {
+        // Rollback already decremented items
+        for (const dec of decrementedItems) {
+          await Product.updateOne({ id: dec.id }, { $inc: { stock: dec.qty } });
+        }
+        
+        // Find if product exists to give a specific error message
+        const existingP = await Product.findOne({ id: item.id });
+        if (!existingP) {
+          return res.status(400).json({ error: `Product not found: ${item.id}` });
+        } else {
+          return res.status(400).json({ error: `Insufficient stock for: ${existingP.name}` });
+        }
+      }
+
+      decrementedItems.push({ id: item.id, qty });
+      
       total += p.price * qty;
       processedItems.push({
         id: item.id,
@@ -198,29 +226,38 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
         isUnique = true;
       }
     }
-    const order = await Order.create({
-      id: orderId,
-      name,
-      phone,
-      email: email || '',
-      address,
-      payment,
-      notes: notes || '',
-      items: processedItems,
-      total,
-      status: 'New',
-      createdAt: new Date().toISOString(),
-      date: new Date().toLocaleString('en-IN', {
-        timeZone: 'Asia/Kolkata',
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    });
 
-    res.json(order);
+    try {
+      const order = await Order.create({
+        id: orderId,
+        name,
+        phone,
+        email: email || '',
+        address,
+        payment,
+        notes: notes || '',
+        items: processedItems,
+        total,
+        status: 'New',
+        createdAt: new Date().toISOString(),
+        date: new Date().toLocaleString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      });
+
+      res.json(order);
+    } catch (orderErr) {
+      // Rollback stock if order creation fails
+      for (const dec of decrementedItems) {
+        await Product.updateOne({ id: dec.id }, { $inc: { stock: dec.qty } });
+      }
+      throw orderErr; // Let the outer catch handle the response
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to place order. Please try again.' });

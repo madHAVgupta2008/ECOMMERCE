@@ -428,10 +428,33 @@ app.patch('/api/orders/:id/status', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: `Invalid status. Must be one of: ${ALLOWED.join(', ')}` });
     }
 
-    if (oldStatus !== 'Delivered' && newStatus === 'Delivered') {
+    if (oldStatus !== 'Cancelled' && newStatus === 'Cancelled') {
       for (const item of order.items) {
-        const p = await Product.findOne({ id: item.id });
-        if (p) { p.stock = Math.max(0, p.stock - item.qty); await p.save(); }
+        await Product.updateOne({ id: item.id }, { $inc: { stock: item.qty } });
+      }
+    } else if (oldStatus === 'Cancelled' && newStatus !== 'Cancelled') {
+      // Re-deduct stock, check for availability first
+      let hasEnoughStock = true;
+      const decremented = [];
+      for (const item of order.items) {
+        const p = await Product.findOneAndUpdate(
+          { id: item.id, stock: { $gte: item.qty } },
+          { $inc: { stock: -item.qty } },
+          { new: true }
+        );
+        if (!p) {
+          hasEnoughStock = false;
+          break;
+        }
+        decremented.push(item);
+      }
+      
+      if (!hasEnoughStock) {
+        // rollback
+        for (const dec of decremented) {
+          await Product.updateOne({ id: dec.id }, { $inc: { stock: dec.qty } });
+        }
+        return res.status(400).json({ error: 'Cannot restore order: Insufficient stock for one or more items.' });
       }
     }
     order.status    = newStatus;
@@ -474,28 +497,34 @@ app.put('/api/orders/:id', requireAdmin, async (req, res) => {
           if (qty === 0) continue;
           const p = await Product.findOne({ id: incoming.id });
           if (!p) return res.status(400).json({ error: `Product not found: ${incoming.id}` });
+          if (order.status !== 'Cancelled') {
+            if (p.stock < qty) return res.status(400).json({ error: `Insufficient stock for ${p.name}` });
+            p.stock -= qty; await p.save();
+          }
           updatedItems.push({ id: p.id, name: p.name, price: p.price, qty, itemCode: p.itemCode });
           newTotal += p.price * qty;
-          if (order.status === 'Delivered') { p.stock = Math.max(0, p.stock - qty); await p.save(); }
           continue;
         }
 
         if (qty === 0) {
-          if (order.status === 'Delivered') {
+          if (order.status !== 'Cancelled') {
             const p = await Product.findOne({ id: existing.id });
             if (p) { p.stock += existing.qty; await p.save(); }
           }
           continue;
         }
 
-        if (order.status === 'Delivered' && qty < existing.qty) {
+        if (order.status !== 'Cancelled' && qty < existing.qty) {
           const diff = existing.qty - qty;
           const p = await Product.findOne({ id: existing.id });
           if (p) { p.stock += diff; await p.save(); }
-        } else if (order.status === 'Delivered' && qty > existing.qty) {
+        } else if (order.status !== 'Cancelled' && qty > existing.qty) {
           const diff = qty - existing.qty;
           const p = await Product.findOne({ id: existing.id });
-          if (p) { p.stock = Math.max(0, p.stock - diff); await p.save(); }
+          if (p) { 
+            if (p.stock < diff) return res.status(400).json({ error: `Insufficient stock for ${p.name}` });
+            p.stock -= diff; await p.save(); 
+          }
         }
 
         updatedItems.push({ ...existing.toObject(), qty });
@@ -520,7 +549,7 @@ app.delete('/api/orders/:id', requireAdmin, async (req, res) => {
   try {
     const order = await Order.findOne({ id: req.params.id });
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (order.status === 'Delivered') {
+    if (order.status !== 'Cancelled') {
       for (const item of order.items) {
         const p = await Product.findOne({ id: item.id });
         if (p) { p.stock += item.qty; await p.save(); }
