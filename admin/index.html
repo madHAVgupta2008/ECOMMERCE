@@ -940,6 +940,17 @@
     }
 
     function eoAddProduct() {
+      if (!_eoSelectedProduct) {
+        const inp = document.getElementById('eoAddSearch');
+        if (inp && inp.value.trim()) {
+          const q = inp.value.trim().toLowerCase();
+          const match = allProducts.find(p => p.itemCode && p.itemCode.toLowerCase() === q) || 
+                        allProducts.find(p => p.name.toLowerCase() === q);
+          if (match) {
+            _eoSelectedProduct = { id: match.id, name: match.name, itemCode: match.itemCode, price: match.price };
+          }
+        }
+      }
       if (!_eoSelectedProduct) { showToast('⚠️ Select a product first'); return; }
       const qty = Math.max(1, parseInt(document.getElementById('eoAddQty').value || '1', 10) || 1);
       // if already in list, just bump the qty
