@@ -57,7 +57,7 @@ async function deleteImageFromCloudinary(url) {
 
 // ── App Setup ───────────────────────────────────────────────────────────────
 const app = express();
-app.set('trust proxy', 1);
+app.set('trust proxy', true); // Trust all proxies to ensure correct client IP is used for rate limiting
 // Render sets PORT automatically; ADMIN_PORT is for local dev only
 const PORT = process.env.PORT || process.env.ADMIN_PORT || 4000;
 
@@ -85,7 +85,7 @@ app.use(cookieParser());
 // ── Rate Limiters ───────────────────────────────────────────────────────────
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests. Please try again later.' }

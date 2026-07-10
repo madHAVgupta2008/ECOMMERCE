@@ -11,7 +11,7 @@ const Category = require('./models/Category');
 
 const app = express();
 // Trust proxy is required when deploying to platforms like Render
-app.set('trust proxy', 1);
+app.set('trust proxy', true);
 const PORT = process.env.PORT || 3000;
 
 // ── MongoDB Connection ─────────────────────────────────────────────────────
@@ -39,10 +39,9 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Rate Limiters ──────────────────────────────────────────────────────────
-// General API limit: 200 requests per 15 minutes per IP
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests. Please try again later.' }
