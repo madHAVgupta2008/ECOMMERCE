@@ -278,6 +278,7 @@
     }
     .ledger-card.lc-income { border-color: #a9dfbf; background: #f0faf4; }
     .ledger-card.lc-expense { border-color: #f5b7b1; background: #fff0f0; }
+    .ledger-card.lc-pending { border-color: #f7dc6f; background: #fef9e7; }
     .ledger-card.lc-profit { border-color: #d4b483; background: #fdf3e3; }
     .ledger-card.loss { border-color: #c0392b; background: #fff0f0; }
     .lc-icon { font-size: 1.6rem; margin-bottom: 6px; }
@@ -373,7 +374,6 @@
     <div class="nav-logo">Rakhi<span>Roots</span></div>
     <div class="nav-right">
       <span class="nav-tag">⚙️ Admin Panel</span>
-      <a href="/" style="color:var(--gold-light);font-size:.82rem;text-decoration:none;">🛍️ Shop</a>
       <button class="btn-logout" onclick="adminLogout()">🚪 Logout</button>
     </div>
   </nav>
@@ -576,6 +576,7 @@
         <div class="ledger-summary" id="ledgerSummary">
           <div class="ledger-card lc-income"><div class="lc-icon">📈</div><div class="lc-val" id="lc-total-income">₹0</div><div class="lc-label">Total Income</div></div>
           <div class="ledger-card lc-expense"><div class="lc-icon">📉</div><div class="lc-val" id="lc-total-expense">₹0</div><div class="lc-label">Total Expense</div></div>
+          <div class="ledger-card lc-pending"><div class="lc-icon">⏳</div><div class="lc-val" id="lc-total-pending">₹0</div><div class="lc-label">Pending Payments</div></div>
           <div class="ledger-card lc-profit" id="ledger-profit-card"><div class="lc-icon">💰</div><div class="lc-val" id="lc-net-pl">₹0</div><div class="lc-label" id="lc-pl-label">Net Profit</div></div>
         </div>
         <div class="ledger-form">
@@ -796,7 +797,7 @@
             ${o.items.map(i => `
               <div class="order-item-chip">
                 <span class="order-item-code">${i.itemCode || 'N/A'}</span>
-                <span class="order-item-name">${i.name}</span>
+                <span class="order-item-name">${i.name}${i.color ? ' (Colour: ' + i.color + ')' : ''}</span>
                 <span class="order-item-qty">×${i.qty}</span>
                 ${i.price ? `<span class="order-item-price">₹${(i.price * i.qty).toLocaleString('en-IN')}</span>` : ''}
               </div>
@@ -807,9 +808,116 @@
         <td style="font-size:.82rem;white-space:nowrap">${o.date}</td>
         <td style="font-size:.82rem">${o.payment}</td>
         <td><select class="status-select" onchange="updateOrderStatus('${o.id}',this.value)">${['New', 'Processing', 'Dispatched', 'Pending Payment', 'Delivered', 'Cancelled'].map(s=>`<option value="${s}"${o.status===s?' selected':''}>${s}</option>`).join('')}</select></td>
-        <td style="white-space:nowrap"><button class="btn-edit" style="margin-bottom:5px" onclick="openEditOrderModal('${o.id}')">✏️ Edit</button><br><button class="btn-danger" onclick="deleteOrder('${o.id}')">🗑️ Delete</button></td>
+        <td style="white-space:nowrap"><button class="btn-edit" style="margin-bottom:5px" onclick="openEditOrderModal('${o.id}')">✏️ Edit</button><br><button class="btn-secondary" style="margin-bottom:5px; padding: 4px 10px; font-size: 0.8rem;" onclick="printInvoice('${o.id}')">🖨️ Invoice</button><br><button class="btn-danger" onclick="deleteOrder('${o.id}')">🗑️ Delete</button></td>
       </tr>`).join('')}
     </tbody></table>`;
+    }
+
+    function printInvoice(orderId) {
+      const order = _ordersCache[orderId];
+      if (!order) { showToast('❌ Order data not found.'); return; }
+      
+      const companyDetails = `
+        <strong>RakhiRoots</strong><br>
+        D120 , GOKULDHAM 4 , MOTI RAM ROAD , RAM NAGAR<br>
+        DELHI, PIN CODE 110032<br>
+        Phone: 9560026018<br>
+        Email: creativestar83@gmail.com
+      `;
+      
+      let itemsHtml = '';
+      let totalItems = 0;
+      order.items.forEach(i => {
+        totalItems += (i.qty || 1);
+        itemsHtml += `
+          <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd;">${i.name}${i.color ? '<br><small style="color: #666;">Colour: ' + i.color + '</small>' : ''}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center;">${i.qty}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">₹${(i.price || 0).toLocaleString('en-IN')}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">₹${((i.price || 0) * i.qty).toLocaleString('en-IN')}</td>
+          </tr>
+        `;
+      });
+      
+      const invoiceHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Invoice - Order #${order.id}</title>
+          <style>
+            body { font-family: 'Nunito', sans-serif; color: #333; margin: 0; padding: 40px; background: #fff; }
+            .invoice-header { display: flex; justify-content: space-between; border-bottom: 2px solid #5c3a1e; padding-bottom: 20px; margin-bottom: 30px; }
+            .company-info { font-size: 0.95rem; line-height: 1.5; color: #444; }
+            .invoice-title { text-align: right; }
+            .invoice-title h1 { margin: 0 0 5px 0; color: #5c3a1e; font-size: 2.2rem; text-transform: uppercase; letter-spacing: 1.5px; }
+            .invoice-title p { margin: 0; font-size: 0.9rem; color: #666; }
+            .bill-to { margin-bottom: 40px; }
+            .bill-to h3 { color: #5c3a1e; margin-bottom: 10px; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 5px; display: inline-block; }
+            .customer-info { font-size: 0.95rem; line-height: 1.6; }
+            .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+            .invoice-table th { background-color: #fdf3e3; color: #5c3a1e; padding: 12px 10px; text-align: left; font-weight: 700; border-bottom: 2px solid #d4b483; }
+            .summary { display: flex; justify-content: space-between; margin-top: 30px; border-top: 2px solid #5c3a1e; padding-top: 20px; }
+            .total-items { font-size: 1rem; color: #555; }
+            .grand-total table { width: 250px; float: right; }
+            .grand-total td { padding: 8px 0; }
+            .final-amt { font-size: 1.4rem; font-weight: 800; color: #8b1a1a; }
+            @media print { body { padding: 0; } @page { margin: 1cm; } }
+          </style>
+        </head>
+        <body>
+          <div class="invoice-header">
+            <div class="company-info">${companyDetails}</div>
+            <div class="invoice-title">
+              <h1>INVOICE</h1>
+              <p>Order No: <strong>#${order.id}</strong></p>
+              <p>Date: ${order.date || new Date().toISOString().split('T')[0]}</p>
+            </div>
+          </div>
+          <div class="bill-to">
+            <h3>BILL TO</h3>
+            <div class="customer-info">
+              <strong>${order.name}</strong><br>
+              ${order.address}<br>
+              Phone: ${order.phone}
+            </div>
+          </div>
+          <table class="invoice-table">
+            <thead>
+              <tr>
+                <th>Item Description</th>
+                <th style="text-align: center;">Qty</th>
+                <th style="text-align: right;">Unit Price</th>
+                <th style="text-align: right;">Total</th>
+              </tr>
+            </thead>
+            <tbody>${itemsHtml}</tbody>
+          </table>
+          <div class="summary">
+            <div class="total-items">
+              <p>Total Items: <strong>${totalItems}</strong></p>
+            </div>
+            <div class="grand-total">
+              <table>
+                <tr>
+                  <td><strong>Grand Total:</strong></td>
+                  <td style="text-align: right;" class="final-amt">₹${Number(order.total || 0).toLocaleString('en-IN')}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+          <div style="margin-top: 60px; text-align: center; color: #777; font-size: 0.85rem; border-top: 1px solid #eee; padding-top: 20px;">
+            Thank you for shopping with us!
+          </div>
+          <script>
+            window.onload = function() { window.print(); }
+          <\/script>
+        </body>
+        </html>
+      `;
+      
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(invoiceHtml);
+      printWindow.document.close();
     }
 
     async function updateOrderStatus(id, status) {
@@ -1365,11 +1473,16 @@
       wrap.innerHTML = '<div class="loading-spinner">⏳ Loading…</div>';
       try {
         const entries = await api.get('/api/cash-entries');
-        let totalIncome=0, totalExpense=0;
-        if (Array.isArray(entries)) entries.forEach(e => { if(e.type==='income') totalIncome+=e.amount; else totalExpense+=e.amount; });
+        let totalIncome=0, totalExpense=0, totalPending=0;
+        if (Array.isArray(entries)) entries.forEach(e => {
+          if(e.type==='income') totalIncome+=e.amount;
+          else if(e.type==='expense') totalExpense+=e.amount;
+          else if(e.type==='pending') totalPending+=e.amount;
+        });
         const netPL = totalIncome - totalExpense;
         document.getElementById('lc-total-income').textContent = '₹' + totalIncome.toLocaleString('en-IN');
         document.getElementById('lc-total-expense').textContent = '₹' + totalExpense.toLocaleString('en-IN');
+        document.getElementById('lc-total-pending').textContent = '₹' + totalPending.toLocaleString('en-IN');
         document.getElementById('lc-net-pl').textContent = (netPL<0?'-₹':'₹') + Math.abs(netPL).toLocaleString('en-IN');
         const profitCard = document.getElementById('ledger-profit-card');
         document.getElementById('lc-pl-label').textContent = netPL < 0 ? 'Net Loss' : 'Net Profit';
