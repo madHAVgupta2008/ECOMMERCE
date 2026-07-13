@@ -791,13 +791,13 @@
     <tbody>${orders.map(o => `
       <tr>
         <td><strong>#${o.id}</strong></td>
-        <td><div style="font-weight:700">${o.name}</div><div style="font-size:.8rem;color:#7a5c3a">${o.phone}</div><div style="font-size:.78rem;color:#a08060;max-width:160px;word-break:break-word">${o.address}</div>${o.notes ? `<div style="font-size:.78rem;color:#888;font-style:italic">📝 ${o.notes}</div>` : ''}</td>
+        <td><div style="font-weight:700">${escHtml(o.name)}</div><div style="font-size:.8rem;color:#7a5c3a">${escHtml(o.phone)}</div><div style="font-size:.78rem;color:#a08060;max-width:160px;word-break:break-word">${escHtml(o.address)}</div>${o.notes ? `<div style="font-size:.78rem;color:#888;font-style:italic">📝 ${escHtml(o.notes)}</div>` : ''}</td>
         <td>
           <div style="min-width:160px">
             ${o.items.map(i => `
               <div class="order-item-chip">
                 <span class="order-item-code">${i.itemCode || 'N/A'}</span>
-                <span class="order-item-name">${i.name}${i.color ? ' (Colour: ' + i.color + ')' : ''}</span>
+                <span class="order-item-name">${escHtml(i.name)}${i.color ? ' (Colour: ' + escHtml(i.color) + ')' : ''}</span>
                 <span class="order-item-qty">×${i.qty}</span>
                 ${i.price ? `<span class="order-item-price">₹${(i.price * i.qty).toLocaleString('en-IN')}</span>` : ''}
               </div>
@@ -831,7 +831,7 @@
         totalItems += (i.qty || 1);
         itemsHtml += `
           <tr>
-            <td style="padding: 10px; border-bottom: 1px solid #ddd;">${i.name}${i.color ? '<br><small style="color: #666;">Colour: ' + i.color + '</small>' : ''}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd;">${escHtml(i.name)}${i.color ? '<br><small style="color: #666;">Colour: ' + escHtml(i.color) + '</small>' : ''}</td>
             <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center;">${i.qty}</td>
             <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">₹${(i.price || 0).toLocaleString('en-IN')}</td>
             <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">₹${((i.price || 0) * i.qty).toLocaleString('en-IN')}</td>
@@ -876,9 +876,9 @@
           <div class="bill-to">
             <h3>BILL TO</h3>
             <div class="customer-info">
-              <strong>${order.name}</strong><br>
-              ${order.address}<br>
-              Phone: ${order.phone}
+              <strong>${escHtml(order.name)}</strong><br>
+              ${escHtml(order.address)}<br>
+              Phone: ${escHtml(order.phone)}
             </div>
           </div>
           <table class="invoice-table">
