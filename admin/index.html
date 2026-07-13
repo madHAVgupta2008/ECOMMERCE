@@ -831,7 +831,10 @@
         totalItems += (i.qty || 1);
         itemsHtml += `
           <tr>
-            <td style="padding: 10px; border-bottom: 1px solid #ddd;">${escHtml(i.name)}${i.color ? '<br><small style="color: #666;">Colour: ' + escHtml(i.color) + '</small>' : ''}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+              <span style="font-family: monospace; font-size: 0.9em; background: #f2e6d9; padding: 2px 4px; border-radius: 3px; color: #5c3a1e; font-weight: bold; margin-right: 6px;">${escHtml(i.itemCode || 'N/A')}</span>${escHtml(i.name)}
+              ${i.color ? '<br><small style="color: #666;">Colour: ' + escHtml(i.color) + '</small>' : ''}
+            </td>
             <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center;">${i.qty}</td>
             <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">₹${(i.price || 0).toLocaleString('en-IN')}</td>
             <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">₹${((i.price || 0) * i.qty).toLocaleString('en-IN')}</td>
