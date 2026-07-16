@@ -15,7 +15,8 @@ const OrderSchema = new mongoose.Schema({
       name: String,
       price: Number,
       qty: Number,
-      itemCode: { type: String, default: '' }
+      itemCode: { type: String, default: '' },
+      color: { type: String, default: '' }
     }
   ],
 

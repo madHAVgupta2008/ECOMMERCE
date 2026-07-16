@@ -797,7 +797,8 @@
             ${o.items.map(i => `
               <div class="order-item-chip">
                 <span class="order-item-code">${i.itemCode || 'N/A'}</span>
-                <span class="order-item-name">${escHtml(i.name)}${i.color ? ' (Colour: ' + escHtml(i.color) + ')' : ''}</span>
+                <span class="order-item-name">${escHtml(i.name)}</span>
+                ${i.color ? `<span style="display:inline-block;background:#fdf0e0;color:#7a3e00;border:1px solid #e8c87a;border-radius:4px;padding:1px 6px;font-size:.72rem;font-weight:700;margin-left:2px">🎨 ${escHtml(i.color)}</span>` : ''}
                 <span class="order-item-qty">×${i.qty}</span>
                 ${i.price ? `<span class="order-item-price">₹${(i.price * i.qty).toLocaleString('en-IN')}</span>` : ''}
               </div>
@@ -985,7 +986,7 @@
       }
       tbody.innerHTML = _editOrderItems.map((item, i) => `
         <tr>
-          <td>${escHtml(item.name)}</td>
+          <td>${escHtml(item.name)}${item.color ? `<br><span style="display:inline-block;background:#fdf0e0;color:#7a3e00;border:1px solid #e8c87a;border-radius:4px;padding:1px 6px;font-size:.7rem;font-weight:700;margin-top:2px">🎨 ${escHtml(item.color)}</span>` : ''}</td>
           <td style="font-family:monospace;font-size:.8rem">${escHtml(item.itemCode||'N/A')}</td>
           <td>₹${Number(item.price||0).toLocaleString('en-IN')}</td>
           <td style="text-align:center">

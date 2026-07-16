@@ -211,7 +211,8 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
         name: p.name,
         price: p.price,
         qty,
-        itemCode: p.itemCode || ''
+        itemCode: p.itemCode || '',
+        color: item.color || ''
       });
     }
 
