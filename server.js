@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
 const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 const Product = require('./models/Product');
 const Order = require('./models/Order');
 const Category = require('./models/Category');
@@ -38,10 +39,13 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ── Compression — gzip/deflate responses for faster page loads ────────────
+app.use(compression());
+
 // ── Rate Limiters ──────────────────────────────────────────────────────────
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 1000,
+  max: 300, // Lowered from 1000 — blocks bots while allowing real users
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests. Please try again later.' }
@@ -160,6 +164,23 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
     if (!name || !phone || !address || !payment || !items || !items.length)
       return res.status(400).json({ error: 'Missing required fields' });
 
+    // ── Field Length Validation ──────────────────────────────────────────────
+    if (name.length > 100)
+      return res.status(400).json({ error: 'Name is too long (max 100 characters).' });
+    if (address.length > 500)
+      return res.status(400).json({ error: 'Address is too long (max 500 characters).' });
+    if (notes && notes.length > 1000)
+      return res.status(400).json({ error: 'Notes are too long (max 1000 characters).' });
+
+    // ── Phone Number Validation ──────────────────────────────────────────────
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.length < 10 || cleanPhone.length > 15)
+      return res.status(400).json({ error: 'Invalid phone number. Must be 10–15 digits.' });
+
+    // ── Cart Size Cap ────────────────────────────────────────────────────────
+    if (items.length > 20)
+      return res.status(400).json({ error: 'Cart cannot exceed 20 different items.' });
+
     // Validate payment method against allowed values
     const ALLOWED_PAYMENTS = ['UPI / QR Code'];
     if (!ALLOWED_PAYMENTS.includes(payment)) {
@@ -179,6 +200,14 @@ app.post('/api/orders', orderLimiter, async (req, res) => {
           await Product.updateOne({ id: dec.id }, { $inc: { stock: dec.qty } });
         }
         return res.status(400).json({ error: `Invalid quantity for item: ${item.id}. Quantity must be a positive whole number.` });
+      }
+
+      // ── Per-Item Quantity Cap ──────────────────────────────────────────────
+      if (qty > 100) {
+        for (const dec of decrementedItems) {
+          await Product.updateOne({ id: dec.id }, { $inc: { stock: dec.qty } });
+        }
+        return res.status(400).json({ error: `Quantity for item ${item.id} cannot exceed 100 per order.` });
       }
 
       // Atomically check stock and decrement

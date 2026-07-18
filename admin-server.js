@@ -61,7 +61,13 @@ app.set('trust proxy', true); // Trust all proxies to ensure correct client IP i
 // Render sets PORT automatically; ADMIN_PORT is for local dev only
 const PORT = process.env.PORT || process.env.ADMIN_PORT || 4000;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'rr_super_secret_jwt_key_change_in_prod_' + Math.random();
+if (!process.env.JWT_SECRET) {
+  console.error('\n❌ FATAL: JWT_SECRET environment variable must be set.');
+  console.error('   Generate one with: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+  console.error('   Set it in your .env file (local) or Render dashboard (production).\n');
+  process.exit(1);
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // CRASH HARD if admin credentials are not set — never fall back to defaults in production
 if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
@@ -321,7 +327,7 @@ app.post('/api/products', requireAdmin, async (req, res) => {
     res.json(product);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to create product: ' + err.message });
+    res.status(500).json({ error: 'Failed to create product. Please try again.' });
   }
 });
 
@@ -378,7 +384,7 @@ app.put('/api/products/:id', requireAdmin, async (req, res) => {
     res.json(product);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to update product: ' + err.message });
+    res.status(500).json({ error: 'Failed to update product. Please try again.' });
   }
 });
 
