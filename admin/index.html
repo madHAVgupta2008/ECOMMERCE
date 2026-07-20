@@ -114,11 +114,91 @@
     }
     .stat-card {
       background: #fff; border: 2px solid #eddcc0; border-radius: 14px;
-      padding: 20px 18px; text-align: center;
+      padding: 20px 18px; text-align: center; transition: box-shadow .2s, transform .15s;
     }
+    .stat-card.clickable { cursor: pointer; }
+    .stat-card.clickable:hover { box-shadow: 0 6px 24px rgba(0,0,0,.1); transform: translateY(-2px); }
+    .stat-card.oos-alert { border-color: #e74c3c; background: #fff5f5; }
+    .stat-card.oos-alert .stat-value { color: #c0392b; }
+    .stat-card.oos-alert .stat-label { color: #e74c3c; font-weight: 700; }
+    .stat-card.low-alert { border-color: #e67e22; background: #fff9f2; }
+    .stat-card.low-alert .stat-value { color: #d35400; }
     .stat-icon { font-size: 1.8rem; margin-bottom: 8px; }
     .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--bark); }
     .stat-label { font-size: .78rem; color: #a08060; margin-top: 4px; }
+
+    /* ── OOS BADGE ON PRODUCT CARD ── */
+    .oos-badge {
+      display: inline-block;
+      background: #e74c3c;
+      color: #fff;
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      padding: 3px 9px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .low-stock-badge {
+      display: inline-block;
+      background: #e67e22;
+      color: #fff;
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      padding: 3px 9px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .admin-product-card.is-oos {
+      border: 2px solid #e74c3c;
+      background: #fff8f8;
+    }
+    .admin-product-card.is-low {
+      border: 2px solid #e67e22;
+      background: #fffaf5;
+    }
+    /* ── OOS FILTER PILLS ── */
+    .stock-filter-wrap { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .stock-pill {
+      padding: 6px 16px; border-radius: 50px; border: 1.5px solid #d4b483;
+      background: #fff; font-size: .82rem; font-weight: 700; cursor: pointer;
+      font-family: 'Nunito', sans-serif; color: var(--bark); transition: all .15s;
+    }
+    .stock-pill:hover { background: #fdf3e3; }
+    .stock-pill.active { background: #e74c3c; border-color: #e74c3c; color: #fff; }
+    .stock-pill.low.active { background: #e67e22; border-color: #e67e22; color: #fff; }
+    .stock-pill.all.active { background: var(--bark); border-color: var(--bark); color: #fff; }
+    /* ── QUICK OOS LIST IN DASHBOARD ── */
+    .oos-list-section { margin-top: 28px; }
+    .oos-list-title {
+      font-family: 'Playfair Display', serif;
+      color: #c0392b; font-size: 1rem; font-weight: 700;
+      margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .oos-list-count {
+      background: #e74c3c; color: #fff; font-size: .72rem;
+      padding: 2px 9px; border-radius: 20px; font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+    }
+    .oos-item-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; border-radius: 10px; margin-bottom: 6px;
+      background: #fff5f5; border: 1px solid #f5c6c6;
+    }
+    .oos-item-row .oos-name { font-weight: 700; font-size: .88rem; color: var(--bark); }
+    .oos-item-row .oos-code { font-size: .75rem; color: #a08060; }
+    .oos-item-row .oos-go-btn {
+      background: none; border: 1.5px solid #e74c3c; color: #e74c3c;
+      border-radius: 6px; padding: 4px 12px; font-size: .78rem; font-weight: 700;
+      font-family: 'Nunito', sans-serif; cursor: pointer; transition: all .15s;
+    }
+    .oos-item-row .oos-go-btn:hover { background: #e74c3c; color: #fff; }
+    .no-oos-msg { text-align: center; padding: 18px; color: #27ae60; font-weight: 700; font-size: .9rem; }
 
     /* ── ORDERS TABLE ── */
     .orders-table { width: 100%; border-collapse: collapse; background: #fff;
@@ -417,7 +497,12 @@
         <div class="stats-grid" id="statsGrid">
           <div class="loading-spinner" style="grid-column:1/-1">⏳ Loading…</div>
         </div>
-        <h3 style="font-family:'Playfair Display',serif;color:var(--bark);margin-bottom:16px">Recent Orders</h3>
+        <!-- OOS quick list in dashboard -->
+        <div class="oos-list-section" id="dashOosSection" style="display:none">
+          <div class="oos-list-title">🚫 Out-of-Stock Items <span class="oos-list-count" id="dashOosCount">0</span></div>
+          <div id="dashOosList"></div>
+        </div>
+        <h3 style="font-family:'Playfair Display',serif;color:var(--bark);margin:28px 0 16px">Recent Orders</h3>
         <div id="recentOrdersWrap"></div>
       </div>
 
@@ -427,12 +512,18 @@
           <h2>My Products</h2>
           <button class="btn-add" onclick="showSection('add-product')">➕ Add New</button>
         </div>
-        <div style="margin-bottom:20px">
+        <div style="margin-bottom:14px">
           <input id="adminProductSearch" type="text" placeholder="🔍 Search by name, item code or category…"
             oninput="filterAdminProducts()"
             style="width:100%;max-width:480px;padding:11px 18px;border:2px solid #d4b483;border-radius:50px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:#fff;color:var(--text-dark);transition:border-color .2s"
             onfocus="this.style.borderColor='var(--saffron)'" onblur="this.style.borderColor='#d4b483'">
         </div>
+        <div class="stock-filter-wrap">
+          <button class="stock-pill all active" id="spill-all" onclick="setStockFilter('all')">All Products</button>
+          <button class="stock-pill" id="spill-oos" onclick="setStockFilter('oos')">🚫 Out of Stock</button>
+          <button class="stock-pill low" id="spill-low" onclick="setStockFilter('low')">⚠️ Low Stock (≤5)</button>
+        </div>
+        <div id="stockFilterSummary" style="font-size:.82rem;color:#a08060;margin-bottom:12px"></div>
         <div class="admin-products-grid" id="adminProductsGrid"></div>
       </div>
 
@@ -746,19 +837,49 @@
       try {
         const s = await api.get('/api/stats');
         if (s.error) { document.getElementById('statsGrid').innerHTML = '<p style="padding:20px;color:#a08060">Could not load stats</p>'; return; }
-        document.getElementById('statsGrid').innerHTML = [
-          { icon:'🛍️', val: s.totalProducts, label:'Total Products' },
-          { icon:'📦', val: s.totalOrders, label:'Total Orders' },
-          { icon:'💰', val: '₹' + s.totalRevenue.toLocaleString('en-IN'), label:'Total Revenue' },
-          { icon:'🔔', val: s.newOrders, label:'New Orders' },
-          { icon:'⚠️', val: s.lowStock, label:'Low Stock' },
-          { icon:'🚫', val: s.outStock, label:'Out of Stock' },
-        ].map(c => `<div class="stat-card"><div class="stat-icon">${c.icon}</div><div class="stat-value">${c.val}</div><div class="stat-label">${c.label}</div></div>`).join('');
+        const cards = [
+          { icon:'🛍️', val: s.totalProducts, label:'Total Products', cls:'' },
+          { icon:'📦', val: s.totalOrders, label:'Total Orders', cls:'' },
+          { icon:'💰', val: '₹' + s.totalRevenue.toLocaleString('en-IN'), label:'Total Revenue', cls:'' },
+          { icon:'🔔', val: s.newOrders, label:'New Orders', cls:'' },
+          { icon:'⚠️', val: s.lowStock, label:'Low Stock (≤5)', cls: s.lowStock > 0 ? 'low-alert clickable' : '', onclick: s.lowStock > 0 ? `onclick="setStockFilter('low');showSection('products')"` : '' },
+          { icon:'🚫', val: s.outStock, label: s.outStock > 0 ? 'Out of Stock — Click to view' : 'Out of Stock', cls: s.outStock > 0 ? 'oos-alert clickable' : '', onclick: s.outStock > 0 ? `onclick="setStockFilter('oos');showSection('products')"` : '' },
+        ];
+        document.getElementById('statsGrid').innerHTML = cards.map(c =>
+          `<div class="stat-card ${c.cls}" ${c.onclick||''}><div class="stat-icon">${c.icon}</div><div class="stat-value">${c.val}</div><div class="stat-label">${c.label}</div></div>`
+        ).join('');
+
+        // Render OOS quick-list in dashboard
+        renderDashOosList();
 
         const dot = document.getElementById('newOrdersDot');
         if (s.newOrders > 0) { dot.textContent = s.newOrders; dot.style.display = 'inline-flex'; }
         else { dot.style.display = 'none'; }
       } catch(e) { document.getElementById('statsGrid').innerHTML = '<p style="padding:20px;color:#a08060">Could not load stats</p>'; }
+    }
+
+    function renderDashOosList() {
+      const section = document.getElementById('dashOosSection');
+      const listEl = document.getElementById('dashOosList');
+      const countEl = document.getElementById('dashOosCount');
+      if (!section || !listEl) return;
+      const oosItems = (allProducts || []).filter(p => p.stock === 0);
+      if (!oosItems.length) {
+        section.style.display = 'block';
+        countEl.textContent = '0';
+        listEl.innerHTML = `<div class="no-oos-msg">✅ All products are in stock!</div>`;
+        return;
+      }
+      section.style.display = 'block';
+      countEl.textContent = oosItems.length;
+      listEl.innerHTML = oosItems.map(p => `
+        <div class="oos-item-row">
+          <div>
+            <div class="oos-name">${escHtml(p.name)}</div>
+            <div class="oos-code">Code: ${escHtml(p.itemCode||'N/A')} · ${escHtml(p.category)}</div>
+          </div>
+          <button class="oos-go-btn" onclick="setStockFilter('oos');showSection('products')" title="View in Products">Update Stock →</button>
+        </div>`).join('');
     }
 
     // ─── RECENT ORDERS ──────────────────────────────────────────────────────────
@@ -1122,26 +1243,64 @@
     });
 
     // ─── PRODUCTS ────────────────────────────────────────────────────────────────
+    let _stockFilter = 'all'; // 'all' | 'oos' | 'low'
+
     async function loadAdminProducts() {
-      try { allProducts = await api.get('/api/products'); renderAdminProducts(allProducts); } catch(e) {}
+      try { allProducts = await api.get('/api/products'); applyStockFilter(); } catch(e) {}
+    }
+
+    function setStockFilter(mode) {
+      _stockFilter = mode;
+      document.querySelectorAll('.stock-pill').forEach(el => el.classList.remove('active'));
+      const pill = document.getElementById('spill-' + mode);
+      if (pill) pill.classList.add('active');
+      applyStockFilter();
+    }
+
+    function applyStockFilter() {
+      const q = (document.getElementById('adminProductSearch') ? document.getElementById('adminProductSearch').value : '').toLowerCase().trim();
+      let list = allProducts || [];
+      if (_stockFilter === 'oos') list = list.filter(p => p.stock === 0);
+      else if (_stockFilter === 'low') list = list.filter(p => p.stock > 0 && p.stock <= 5);
+      if (q) list = list.filter(p => p.name.toLowerCase().includes(q) || (p.itemCode||'').toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q));
+      // Update summary
+      const sumEl = document.getElementById('stockFilterSummary');
+      if (sumEl) {
+        const oosCount = (allProducts||[]).filter(p => p.stock === 0).length;
+        const lowCount = (allProducts||[]).filter(p => p.stock > 0 && p.stock <= 5).length;
+        if (_stockFilter === 'oos') sumEl.textContent = `Showing ${list.length} out-of-stock item${list.length !== 1 ? 's' : ''}`;
+        else if (_stockFilter === 'low') sumEl.textContent = `Showing ${list.length} low-stock item${list.length !== 1 ? 's' : ''}`;
+        else sumEl.textContent = oosCount > 0 ? `⚠️ ${oosCount} out-of-stock · ${lowCount} low-stock` : (lowCount > 0 ? `⚠️ ${lowCount} low-stock items` : '');
+      }
+      renderAdminProducts(list);
     }
 
     function filterAdminProducts() {
-      const q = (document.getElementById('adminProductSearch').value || '').toLowerCase().trim();
-      if (!q) { renderAdminProducts(allProducts); return; }
-      renderAdminProducts(allProducts.filter(p => p.name.toLowerCase().includes(q) || (p.itemCode||'').toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q)));
+      applyStockFilter();
     }
 
     function renderAdminProducts(list) {
       const grid = document.getElementById('adminProductsGrid');
-      if (!list || !list.length) { grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="big-icon">🪢</div><h3>${allProducts.length ? 'No products match your search' : 'No products yet'}</h3></div>`; return; }
+      if (!list || !list.length) {
+        const emptyMsg = _stockFilter === 'oos' ? '✅ No out-of-stock items!' : _stockFilter === 'low' ? '✅ No low-stock items!' : (allProducts.length ? 'No products match your search' : 'No products yet');
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="big-icon">${_stockFilter === 'oos' || _stockFilter === 'low' ? '✅' : '🪢'}</div><h3>${emptyMsg}</h3></div>`;
+        return;
+      }
       grid.innerHTML = list.map(p => {
-        const sc = p.stock === 0 ? '#e74c3c' : p.stock <= 5 ? '#e67e22' : '#27ae60';
-        return `<div class="admin-product-card">
+        const isOos = p.stock === 0;
+        const isLow = p.stock > 0 && p.stock <= 5;
+        const sc = isOos ? '#e74c3c' : isLow ? '#e67e22' : '#27ae60';
+        const cardCls = isOos ? 'admin-product-card is-oos' : isLow ? 'admin-product-card is-low' : 'admin-product-card';
+        const badge = isOos
+          ? `<span class="oos-badge">Out of Stock</span>`
+          : isLow
+          ? `<span class="low-stock-badge">Low: ${p.stock} left</span>`
+          : '';
+        return `<div class="${cardCls}">
           <div class="admin-product-img">${p.images && p.images[0] ? `<img src="${p.images[0]}" alt="">` : `<span>${p.emoji||'🪢'}</span>`}</div>
           <div class="admin-product-body">
-            <div class="admin-product-name">${p.name}</div>
-            <div class="admin-product-meta">${p.category} · <strong>${p.itemCode||''}</strong> · ₹${p.price}</div>
+            <div class="admin-product-name">${escHtml(p.name)}${badge}</div>
+            <div class="admin-product-meta">${escHtml(p.category)} · <strong>${escHtml(p.itemCode||'')}</strong> · ₹${p.price}</div>
             <div class="admin-product-footer">
               <div class="stock-input-wrap"><span style="font-size:.82rem;font-weight:700;color:${sc}">Stock:</span><input class="stock-input" type="number" value="${p.stock}" min="0" onchange="updateStock('${p.id}',this.value)"></div>
               <div class="action-btns"><button class="btn-edit" onclick="editProduct('${p.id}')">✏️ Edit</button><button class="btn-delete" onclick="deleteProduct('${p.id}')">🗑</button></div>

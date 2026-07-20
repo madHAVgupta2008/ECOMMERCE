@@ -724,6 +724,50 @@
       opacity: .88
     }
 
+    .checkout-btn:disabled,
+    .checkout-btn[disabled] {
+      background: #ccc;
+      cursor: not-allowed;
+      opacity: 1;
+    }
+    .cart-oos-banner {
+      background: #fff3f3;
+      border: 1.5px solid #e74c3c;
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin: 0 0 12px;
+      font-size: .82rem;
+      color: #c0392b;
+      font-weight: 700;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.45;
+    }
+    .cart-item.oos {
+      border: 1.5px solid #e74c3c;
+      border-radius: 12px;
+      background: #fff8f8;
+      position: relative;
+      overflow: hidden;
+    }
+    .cart-item.oos::before {
+      content: 'OUT OF STOCK';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #e74c3c;
+      color: #fff;
+      font-size: .62rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .cart-item.oos .qty-btn { pointer-events: none; opacity: .35; }
+    .cart-item.oos .cart-item-name { color: #c0392b; }
+    .cart-item.oos .cart-item-price { text-decoration: line-through; color: #aaa; }
+
     .empty-cart {
       text-align: center;
       padding: 60px 20px;
@@ -1396,6 +1440,95 @@
         transform: translateX(-50%) translateY(0)
       }
     }
+
+    /* ── OUT-OF-STOCK ALERT MODAL ───────────────────────────────────────────── */
+    #outOfStockModal {
+      position: fixed;
+      inset: 0;
+      z-index: 20000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease;
+    }
+    #outOfStockModal.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .oos-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 36px 32px 28px;
+      max-width: 360px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      transform: translateY(30px) scale(.96);
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    #outOfStockModal.open .oos-card {
+      transform: translateY(0) scale(1);
+    }
+    .oos-icon {
+      font-size: 3.2rem;
+      margin-bottom: 12px;
+      animation: oosShake .5s ease .1s both;
+    }
+    @keyframes oosShake {
+      0%,100%{transform:rotate(0)}
+      20%{transform:rotate(-10deg)}
+      40%{transform:rotate(10deg)}
+      60%{transform:rotate(-8deg)}
+      80%{transform:rotate(6deg)}
+    }
+    .oos-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #9B1D20;
+      margin-bottom: 8px;
+    }
+    .oos-product-name {
+      display: inline-block;
+      background: #fff3e0;
+      color: #5C3A1E;
+      border: 1.5px solid #D4A017;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-weight: 700;
+      font-size: .95rem;
+      margin: 10px 0 14px;
+      word-break: break-word;
+    }
+    .oos-desc {
+      font-size: .88rem;
+      color: #6B4226;
+      line-height: 1.55;
+      margin-bottom: 22px;
+    }
+    .oos-dismiss-btn {
+      background: linear-gradient(135deg,#E8601C,#9B1D20);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 34px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Nunito',sans-serif;
+      cursor: pointer;
+      width: 100%;
+      transition: transform .15s,box-shadow .15s;
+      box-shadow: 0 4px 16px rgba(155,29,32,.35);
+    }
+    .oos-dismiss-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(155,29,32,.45);
+    }
+    .oos-dismiss-btn:active { transform: translateY(0); }
 
     .empty-state {
       text-align: center;
@@ -3310,6 +3443,17 @@
 
   <div class="toast" id="toast"></div>
 
+  <!-- OUT-OF-STOCK ALERT MODAL -->
+  <div id="outOfStockModal" role="alertdialog" aria-modal="true" aria-labelledby="oosTitle" onclick="if(event.target===this)closeOutOfStockModal()">
+    <div class="oos-card">
+      <div class="oos-icon">🚫</div>
+      <div class="oos-title" id="oosTitle">Item Out of Stock!</div>
+      <div class="oos-product-name" id="oosProductName"></div>
+      <p class="oos-desc" id="oosDesc">Sorry, this item was just purchased by someone else and is no longer available. Please remove it from your cart and continue shopping.</p>
+      <button class="oos-dismiss-btn" onclick="closeOutOfStockModal()">Got it — Update Cart</button>
+    </div>
+  </div>
+
   <!-- LEGAL MODAL -->
   <div class="modal-overlay" id="legalModal">
     <div class="modal">
@@ -3814,7 +3958,41 @@
       });
     }
     function updateCartCount() { document.getElementById('cartCount').textContent = cart.reduce((s, i) => s + i.qty, 0); }
-    function toggleCart() { document.getElementById('cartOverlay').classList.toggle('open'); renderCartPanel(); }
+    
+    let cartStockPoll = null;
+    function toggleCart() {
+      const overlay = document.getElementById('cartOverlay');
+      overlay.classList.toggle('open');
+      
+      if (overlay.classList.contains('open')) {
+        api.get('/api/products').then(fresh => {
+          if (!Array.isArray(fresh)) return;
+          fresh.forEach(fp => {
+            const existing = allProducts.find(p => p.id === fp.id);
+            if (existing) existing.stock = fp.stock;
+          });
+          renderCartPanel();
+        }).catch(() => {});
+        
+        if (!cartStockPoll) {
+           cartStockPoll = setInterval(() => {
+             if (cart.length > 0) {
+                api.get('/api/products').then(fresh => {
+                    fresh.forEach(fp => {
+                        const existing = allProducts.find(p => p.id === fp.id);
+                        if (existing) existing.stock = fp.stock;
+                    });
+                    renderCartPanel();
+                }).catch(() => {});
+             }
+           }, 120000);
+        }
+      } else if (cartStockPoll) {
+        clearInterval(cartStockPoll);
+        cartStockPoll = null;
+      }
+      renderCartPanel();
+    }
     function closeCartOnBg(e) { if (e.target === document.getElementById('cartOverlay')) toggleCart(); }
 
     function renderCartPanel() {
@@ -3825,8 +4003,19 @@
         footer.innerHTML = '';
         return;
       }
-      
-      const total = cart.reduce((s, i) => { const p = allProducts.find(x => x.id === i.id); return s + (p ? p.price * i.qty : 0); }, 0);
+
+      // Detect OOS items using live allProducts stock data
+      const oosItems = cart.filter(i => {
+        const p = allProducts.find(x => x.id === i.id);
+        return p && p.stock === 0;
+      });
+      const insufficientItems = cart.filter(i => {
+        const p = allProducts.find(x => x.id === i.id);
+        return p && p.stock > 0 && p.stock < i.qty;
+      });
+      const hasBlocker = oosItems.length > 0;
+
+      const total = cart.reduce((s, i) => { const p = allProducts.find(x => x.id === i.id); return s + (p && p.stock > 0 ? p.price * i.qty : 0); }, 0);
       
       // Free Shipping Logic
       const threshold = 999;
@@ -3843,18 +4032,46 @@
         </div>
       `;
       
+      // OOS banner at top of cart items
+      let oosBannerHTML = '';
+      if (oosItems.length > 0) {
+        const nameList = oosItems.map(i => {
+          const p = allProducts.find(x => x.id === i.id);
+          return p ? `\u201c${escHtml(p.name)}\u201d` : '';
+        }).filter(Boolean).join(', ');
+        oosBannerHTML = `<div class="cart-oos-banner">
+          <span style="font-size:1.1rem">🚫</span>
+          <span><strong>Out of stock:</strong> ${nameList}<br>
+          <span style="font-weight:400">Please remove ${oosItems.length > 1 ? 'these items' : 'this item'} to place your order.</span></span>
+        </div>`;
+      } else if (insufficientItems.length > 0) {
+        const nameList = insufficientItems.map(i => {
+          const p = allProducts.find(x => x.id === i.id);
+          return p ? `\u201c${escHtml(p.name)}\u201d (only ${p.stock} left)` : '';
+        }).filter(Boolean).join(', ');
+        oosBannerHTML = `<div class="cart-oos-banner" style="border-color:#e67e22;background:#fff9f0;color:#b7560a">
+          <span style="font-size:1.1rem">⚠️</span>
+          <span><strong>Low stock:</strong> ${nameList}<br>
+          <span style="font-weight:400">Please reduce the quantity to match available stock.</span></span>
+        </div>`;
+      }
+
       const cartItemsHTML = cart.map(item => {
         const p = allProducts.find(x => x.id === item.id); if (!p) return '';
+        const isOos = p.stock === 0;
         const img = p.images && p.images[0] ? `<img src="${p.images[0]}" alt="">` : `<span style="font-size:2rem">${p.emoji || '🪢'}</span>`;
         const colorTag = item.color
           ? `<div style="font-size:.75rem;color:var(--bark);font-weight:700;margin-top:3px;display:flex;align-items:center;gap:4px">${colorDot(item.color)}<span>${escHtml(item.color)}</span></div>`
           : '';
-        return `<div class="cart-item">
+        const priceDisplay = isOos
+          ? `<div class="cart-item-price" style="text-decoration:line-through;color:#bbb">₹${p.price * item.qty}</div>`
+          : `<div class="cart-item-price">₹${p.price * item.qty}</div>`;
+        return `<div class="cart-item${isOos ? ' oos' : ''}">
       <div class="cart-item-img">${img}</div>
       <div class="cart-item-info">
-        <div class="cart-item-name">${p.name}</div>
+        <div class="cart-item-name">${escHtml(p.name)}</div>
         ${colorTag}
-        <div class="cart-item-price">₹${p.price * item.qty}</div>
+        ${priceDisplay}
         <div class="qty-control">
           <button class="qty-btn" onclick="changeQty('${item.cartKey}',-1)">−</button>
           <span class="qty-num">${item.qty}</span>
@@ -3864,11 +4081,17 @@
       </div>
     </div>`;
       }).join('');
-      
-      container.innerHTML = shippingHTML + cartItemsHTML;
-      
-      footer.innerHTML = `<div class="cart-total"><span>Total</span><span>₹${total}</span></div>
+
+      container.innerHTML = shippingHTML + oosBannerHTML + cartItemsHTML;
+
+      if (hasBlocker) {
+        const oosNames = oosItems.map(i => { const p = allProducts.find(x => x.id === i.id); return p ? escHtml(p.name) : ''; }).filter(Boolean).join(', ');
+        footer.innerHTML = `<div class="cart-total"><span>Total</span><span>₹${total}</span></div>
+    <button class="checkout-btn" disabled>🚫 Can't order — ${oosNames} out of stock</button>`;
+      } else {
+        footer.innerHTML = `<div class="cart-total"><span>Total</span><span>₹${total}</span></div>
     <button class="checkout-btn" onclick="openCheckout()">🎁 Place Order</button>`;
+      }
     }
 
     function changeQty(cartKey, d) {
@@ -3952,9 +4175,19 @@
         });
 
         if (order.error) {
-          showToast('❌ ' + order.error);
           btn.disabled = false;
           btn.textContent = '✅ Confirm Order';
+          // Detect stock/availability errors and show a prominent modal
+          const errMsg = order.error || '';
+          const stockMatch = errMsg.match(/^Insufficient stock for:\s*(.+)$/i);
+          if (stockMatch) {
+            const productName = stockMatch[1].trim();
+            showOutOfStockModal(productName);
+          } else if (/out of stock|not available|no stock/i.test(errMsg)) {
+            showOutOfStockModal();
+          } else {
+            showToast('❌ ' + errMsg);
+          }
           return;
         }
 
@@ -5264,6 +5497,31 @@ Total: ₹${order.total}`;
       const t = document.getElementById('toast');
       t.textContent = msg; t.style.display = 'block';
       clearTimeout(t._t); t._t = setTimeout(() => t.style.display = 'none', 2800);
+    }
+
+    // ─── OUT-OF-STOCK MODAL ─────────────────────────────────────────────────────
+    function showOutOfStockModal(productName) {
+      const modal = document.getElementById('outOfStockModal');
+      const nameEl = document.getElementById('oosProductName');
+      const descEl = document.getElementById('oosDesc');
+      if (productName) {
+        nameEl.textContent = productName;
+        nameEl.style.display = 'inline-block';
+        descEl.textContent = 'Sorry, \u201c' + productName + '\u201d was just purchased by someone else and is now out of stock. Please remove it from your cart or reduce the quantity, then try placing your order again.';
+      } else {
+        nameEl.style.display = 'none';
+        descEl.textContent = 'One or more items in your cart are now out of stock. Please update your cart and try again.';
+      }
+      modal.classList.add('open');
+      // Close on Escape
+      modal._escFn = (e) => { if (e.key === 'Escape') closeOutOfStockModal(); };
+      document.addEventListener('keydown', modal._escFn);
+    }
+
+    function closeOutOfStockModal() {
+      const modal = document.getElementById('outOfStockModal');
+      modal.classList.remove('open');
+      if (modal._escFn) { document.removeEventListener('keydown', modal._escFn); modal._escFn = null; }
     }
 
     function adminLogout() {
