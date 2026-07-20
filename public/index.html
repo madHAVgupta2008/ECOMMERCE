@@ -3367,15 +3367,38 @@
     let allProducts = [];
     let allCategories = [];  // [{_id, name, emoji}]
     let _ordersCache = {}; // id → order object, used by openEditOrder
-    let cart = [];
+    // ── CART PERSISTENCE ─────────────────────────────────────────────────────
+    // Guard: some browsers (iOS private mode, strict cookie blockers) throw on
+    // localStorage access. We detect this once so saveCart/loadCart never throw.
+    let _lsAvailable = false;
     try {
-      cart = JSON.parse(localStorage.getItem('rr_cart')) || [];
+      localStorage.setItem('__rr_test__', '1');
+      localStorage.removeItem('__rr_test__');
+      _lsAvailable = true;
     } catch (e) {
-      cart = [];
+      _lsAvailable = false;
+    }
+
+    let cart = [];
+    if (_lsAvailable) {
+      try {
+        cart = JSON.parse(localStorage.getItem('rr_cart')) || [];
+        // Ensure every item has the expected shape; discard corrupt entries
+        if (!Array.isArray(cart)) cart = [];
+        cart = cart.filter(i => i && typeof i.id === 'string' && typeof i.qty === 'number' && i.qty > 0);
+      } catch (e) {
+        cart = [];
+      }
     }
 
     function saveCart() {
-      localStorage.setItem('rr_cart', JSON.stringify(cart));
+      if (!_lsAvailable) return; // gracefully skip in private/restricted mode
+      try {
+        localStorage.setItem('rr_cart', JSON.stringify(cart));
+      } catch (e) {
+        // Storage full or blocked — cart lives in memory only this session
+        console.warn('[RakhiRoots] Could not persist cart:', e);
+      }
     }
     let currentCategory = 'All';
     let newFiles = [];       // File objects for upload
@@ -3482,6 +3505,17 @@
     async function loadProducts() {
       try {
         allProducts = await api.get('/api/products');
+        // ── Clean stale cart entries ─────────────────────────────────────────
+        // After products load, remove any cart item whose product ID no longer
+        // exists in the catalogue. Without this, users can see a blank cart
+        // even though items were correctly saved.
+        const validIds = new Set(allProducts.map(p => p.id));
+        const before = cart.length;
+        cart = cart.filter(i => validIds.has(i.id));
+        if (cart.length !== before) {
+          saveCart(); // persist the cleaned cart
+          updateCartCount();
+        }
       } catch (e) { showToast('⚠️ Could not load products'); allProducts = []; }
     }
 
