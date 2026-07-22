@@ -4198,15 +4198,6 @@
         <label>Your Review *</label>
         <textarea id="reviewText" placeholder="Tell us what you loved about your Rakhi! 😊" style="min-height:110px;resize:vertical"></textarea>
       </div>
-      <div class="form-row">
-        <label>Add Photos <small style="font-weight:400;color:#999">(optional – up to 4 photos)</small></label>
-        <div class="review-photo-upload" onclick="document.getElementById('reviewPhotoInput').click()">
-          <div style="font-size:2rem;margin-bottom:6px">📷</div>
-          <p style="font-size:.9rem;color:#7a5c3a"><strong>Click to upload photos</strong><br><small>JPG, PNG (max 5MB each)</small></p>
-        </div>
-        <input type="file" id="reviewPhotoInput" accept="image/*" multiple style="display:none" onchange="handleReviewPhotos(event)">
-        <div class="review-photo-preview" id="reviewPhotoPreview"></div>
-      </div>
       <div class="modal-btns">
         <button class="btn-primary" id="submitReviewBtn" onclick="submitReview()">❤️ Submit Review</button>
         <button class="btn-secondary" onclick="closeReviewModal()">Cancel</button>
@@ -5010,10 +5001,59 @@ Total: ₹${order.total}`;
           <strong>${phone}</strong>
         </p>
 
+        <!-- ── INLINE REVIEW PROMPT ── -->
+        <div id="postOrderReviewBox" style="
+          margin-top:24px;
+          background:linear-gradient(135deg,#FDF6EC,#FFF8F0);
+          border:2px solid #EDDCC0;
+          border-radius:18px;
+          padding:20px;
+          text-align:left;
+        ">
+          <div style="text-align:center;margin-bottom:14px;">
+            <div style="font-size:1.6rem;margin-bottom:4px;">❤️</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--bark);font-weight:700;">Love your Rakhi? Share it!</div>
+            <p style="font-size:.82rem;color:var(--text-mid);margin-top:4px;">Your review helps other families find the perfect Rakhi.</p>
+          </div>
+
+          <div style="display:flex;justify-content:center;gap:8px;margin-bottom:14px;" id="postOrderStars">
+            <span onclick="postOrderSetStar(1)" data-s="1" style="font-size:2rem;cursor:pointer;color:#ddd;transition:color .15s,transform .15s">★</span>
+            <span onclick="postOrderSetStar(2)" data-s="2" style="font-size:2rem;cursor:pointer;color:#ddd;transition:color .15s,transform .15s">★</span>
+            <span onclick="postOrderSetStar(3)" data-s="3" style="font-size:2rem;cursor:pointer;color:#ddd;transition:color .15s,transform .15s">★</span>
+            <span onclick="postOrderSetStar(4)" data-s="4" style="font-size:2rem;cursor:pointer;color:#ddd;transition:color .15s,transform .15s">★</span>
+            <span onclick="postOrderSetStar(5)" data-s="5" style="font-size:2rem;cursor:pointer;color:#ddd;transition:color .15s,transform .15s">★</span>
+          </div>
+
+          <div id="postOrderReviewFields" style="display:none;">
+            <textarea id="postOrderReviewText" placeholder="What did you love about your Rakhi? 😊" style="
+              width:100%;padding:11px 14px;border:2px solid #d4b483;border-radius:12px;
+              font-family:'Nunito',sans-serif;font-size:.9rem;outline:none;
+              background:#fff;resize:vertical;min-height:80px;color:var(--text-dark);
+              margin-bottom:10px;
+            "></textarea>
+            <div style="display:flex;gap:10px;">
+              <button onclick="postOrderSubmitReview('${name}')" style="
+                flex:1;padding:11px;background:linear-gradient(135deg,#E8601C,#9B1D20);
+                color:#fff;border:none;border-radius:12px;font-size:.9rem;font-weight:700;
+                cursor:pointer;font-family:'Nunito',sans-serif;transition:opacity .2s;
+              ">❤️ Submit Review</button>
+              <button onclick="document.getElementById('postOrderReviewBox').style.display='none'" style="
+                padding:11px 16px;background:#fff;border:2px solid #d4b483;color:var(--bark);
+                border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;
+              ">Skip</button>
+            </div>
+          </div>
+
+          <div id="postOrderReviewThanks" style="display:none;text-align:center;padding:10px 0;">
+            <div style="font-size:2rem;margin-bottom:6px;">🌸</div>
+            <div style="font-weight:700;color:var(--leaf);font-size:.95rem;">Thank you for your review!</div>
+          </div>
+        </div>
+
         <button
           class="btn-primary"
           onclick="closeModal()"
-          style="margin-top:24px;width:100%">
+          style="margin-top:16px;width:100%">
           🛍️ Continue Shopping
         </button>
       </div>`;
@@ -5030,7 +5070,34 @@ Total: ₹${order.total}`;
 
       }
     }
-    function closeModal() { document.getElementById('checkoutModal').classList.remove('open'); }
+    function closeModal() {
+      document.getElementById('checkoutModal').classList.remove('open');
+      // If a post-order review was just submitted, scroll to and highlight it
+      if (window._postOrderReviewJustSubmitted) {
+        window._postOrderReviewJustSubmitted = false;
+        renderReviews();
+        setTimeout(() => {
+          const section = document.getElementById('customerReviews');
+          if (section) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Pulse-highlight the first (newest) review card
+            setTimeout(() => {
+              const firstCard = document.querySelector('#reviewsGrid .review-card');
+              if (firstCard) {
+                firstCard.style.transition = 'box-shadow .4s, transform .4s';
+                firstCard.style.boxShadow = '0 0 0 4px #E8601C, 0 12px 36px rgba(232,96,28,0.3)';
+                firstCard.style.transform = 'translateY(-4px)';
+                setTimeout(() => {
+                  firstCard.style.boxShadow = '';
+                  firstCard.style.transform = '';
+                }, 1800);
+              }
+            }, 600);
+          }
+        }, 300);
+      }
+    }
+
 
     // ─── ADMIN ─────────────────────────────────────────────────────────────────
     function showAdminSection(name, el) {
@@ -6410,7 +6477,6 @@ Total: ₹${order.total}`;
     const REVIEWS_LS_KEY = 'rr_customer_reviews';
     let allReviews = [];
     let currentReviewRating = 0;
-    let reviewPhotosBase64 = [];
 
     function loadReviews() {
       try {
@@ -6445,9 +6511,6 @@ Total: ₹${order.total}`;
         const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
         const initial = (r.name || 'A').charAt(0).toUpperCase();
         const dateStr = new Date(r.ts).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-        const photosHtml = (r.photos || []).map((p, pi) =>
-          `<img class="review-photo" src="${p}" alt="Review photo" loading="lazy" onclick="openLightbox('${p}')">`
-        ).join('');
         return `
           <div class="review-card" id="review-card-${idx}">
             <div class="review-card-header">
@@ -6460,7 +6523,6 @@ Total: ₹${order.total}`;
               <div class="review-date">${dateStr}</div>
             </div>
             <div class="review-text">"${escHtml(r.text)}"</div>
-            ${photosHtml ? `<div class="review-photos">${photosHtml}</div>` : ''}
             <span class="review-verified">✓ Verified Purchase</span>
           </div>
         `;
@@ -6473,12 +6535,9 @@ Total: ₹${order.total}`;
 
     function openReviewModal() {
       currentReviewRating = 0;
-      reviewPhotosBase64 = [];
       document.getElementById('reviewName').value = '';
       document.getElementById('reviewLocation').value = '';
       document.getElementById('reviewText').value = '';
-      document.getElementById('reviewPhotoPreview').innerHTML = '';
-      document.getElementById('reviewPhotoInput').value = '';
       updateStarPicker(0);
       document.getElementById('reviewModalOverlay').classList.add('open');
     }
@@ -6502,22 +6561,6 @@ Total: ₹${order.total}`;
       });
     }
 
-    function handleReviewPhotos(e) {
-      const files = Array.from(e.target.files).slice(0, 4 - reviewPhotosBase64.length);
-      files.forEach(f => {
-        if (f.size > 5 * 1024 * 1024) { showToast('Max photo size is 5MB'); return; }
-        const reader = new FileReader();
-        reader.onload = ev => {
-          reviewPhotosBase64.push(ev.target.result);
-          const img = document.createElement('img');
-          img.src = ev.target.result;
-          img.className = 'rp-preview-img';
-          document.getElementById('reviewPhotoPreview').appendChild(img);
-        };
-        reader.readAsDataURL(f);
-      });
-    }
-
     function submitReview() {
       const name = document.getElementById('reviewName').value.trim();
       const text = document.getElementById('reviewText').value.trim();
@@ -6527,7 +6570,7 @@ Total: ₹${order.total}`;
       if (!currentReviewRating) { showToast('Please select a rating ⭐'); return; }
       if (!text) { showToast('Please write your review'); return; }
 
-      const review = { name, location, rating: currentReviewRating, text, photos: [...reviewPhotosBase64], ts: Date.now() };
+      const review = { name, location, rating: currentReviewRating, text, photos: [], ts: Date.now() };
       allReviews.push(review);
       saveReviews();
       closeReviewModal();
@@ -6545,6 +6588,53 @@ Total: ₹${order.total}`;
 
     function closeLightbox() {
       document.getElementById('photoLightbox').classList.remove('open');
+    }
+
+    let _postOrderRating = 0;
+    window._postOrderReviewJustSubmitted = false;
+
+    function postOrderSetStar(n) {
+      _postOrderRating = n;
+      const stars = document.querySelectorAll('#postOrderStars span');
+      stars.forEach(s => {
+        const filled = parseInt(s.dataset.s) <= n;
+        s.style.color = filled ? '#F59E0B' : '#ddd';
+        s.style.transform = filled ? 'scale(1.15)' : 'scale(1)';
+      });
+      const fields = document.getElementById('postOrderReviewFields');
+      if (fields) fields.style.display = 'block';
+      setTimeout(() => {
+        const ta = document.getElementById('postOrderReviewText');
+        if (ta) ta.focus();
+      }, 100);
+    }
+
+    function postOrderSubmitReview(customerName) {
+      const text = (document.getElementById('postOrderReviewText')?.value || '').trim();
+      if (!_postOrderRating) { showToast('Please select a star rating ⭐'); return; }
+      if (!text) { showToast('Please write a short review'); return; }
+
+      const review = {
+        name: customerName || 'Happy Customer',
+        location: '',
+        rating: _postOrderRating,
+        text,
+        photos: [],
+        ts: Date.now()
+      };
+      allReviews.push(review);
+      saveReviews();
+      renderReviews();
+      window._postOrderReviewJustSubmitted = true;
+
+      // Show thank-you state inside the box
+      const fields = document.getElementById('postOrderReviewFields');
+      const stars = document.getElementById('postOrderStars');
+      const thanks = document.getElementById('postOrderReviewThanks');
+      if (fields) fields.style.display = 'none';
+      if (stars) stars.style.display = 'none';
+      if (thanks) thanks.style.display = 'block';
+      _postOrderRating = 0;
     }
 
     // Load reviews on page start
