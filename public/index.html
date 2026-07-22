@@ -3558,20 +3558,18 @@
       padding-left: 20px;
     }
 
-    /* WhatsApp Float */
+    /* WhatsApp Float & Nav Icon */
     .whatsapp-float {
       position: fixed;
-      width: 55px;
-      height: 55px;
-      bottom: 90px;
+      width: 48px;
+      height: 48px;
+      bottom: 80px;
       right: 20px;
       background-color: #25d366;
       color: #FFF;
-      border-radius: 50px;
-      text-align: center;
-      font-size: 30px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
-      z-index: 99;
+      border-radius: 50%;
+      box-shadow: 0 4px 14px rgba(37, 211, 102, 0.4);
+      z-index: 999;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -3581,19 +3579,38 @@
     .whatsapp-float:hover {
       background-color: #128C7E;
       transform: scale(1.1);
-      box-shadow: 2px 4px 12px rgba(0,0,0,0.3);
+      box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6);
       color: #FFF;
+    }
+    .nav-wa-btn {
+      width: 38px;
+      height: 38px;
+      background: #25D366;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(37, 211, 102, 0.4);
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .nav-wa-btn:hover {
+      background: #128C7E;
+      transform: scale(1.08);
+    }
+    .nav-right-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     @media (min-width: 768px) {
       .whatsapp-float {
-        bottom: 30px;
-        right: 30px;
-        width: 60px;
-        height: 60px;
-      }
-      .whatsapp-float svg {
-        width: 32px;
-        height: 32px;
+        bottom: 24px;
+        right: 24px;
+        width: 52px;
+        height: 52px;
       }
     }
     /* ── LEFT SIDE SHELF ──────────────────────────────────────────────── */
@@ -3841,9 +3858,14 @@
       <div class="nav-tab active" onclick="showPage('shop',this)">🛍️ Shop</div>
       <div class="nav-tab" onclick="showPage('my-orders',this)">📦 My Orders</div>
     </div>
-    <button class="cart-btn" onclick="toggleCart()">
-      🛒 Cart <span class="cart-count" id="cartCount">0</span>
-    </button>
+    <div class="nav-right-actions">
+      <a href="https://wa.me/919210326018" target="_blank" rel="noopener noreferrer" class="nav-wa-btn" title="Chat on WhatsApp" aria-label="Chat on WhatsApp">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      </a>
+      <button class="cart-btn" onclick="toggleCart()">
+        🛒 Cart <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </div>
   </nav>
 
   <!-- ══════════════ SHOP ══════════════ -->
@@ -3872,20 +3894,7 @@
       </div>
     </div>
 
-    <!-- WHATSAPP ORDER INFO -->
-    <div class="whatsapp-order-section">
-      <div class="whatsapp-order-inner">
-        <div class="wa-order-icon">💚</div>
-        <div class="wa-order-text">
-          <h3>How to Order?</h3>
-          <p>Add items to cart → Place order → We confirm on <strong>WhatsApp</strong> → Pay via <strong>QR Code</strong> shared on WhatsApp → Sit back &amp; relax! ✨</p>
-        </div>
-        <a href="https://wa.me/919560026018" class="wa-order-btn" target="_blank" rel="noopener noreferrer">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-          Chat on WhatsApp
-        </a>
-      </div>
-    </div>
+
 
     <div class="store-controls">
       <div class="filter-chips" id="filterChips"></div>
@@ -3936,7 +3945,7 @@
             <h4>📞 Contact Us</h4>
             <div class="footer-contact-item">
               <span class="fci-icon">📱</span>
-              <a href="tel:+919560026018">+91 95600 26018</a>
+              <a href="https://wa.me/919210326018" target="_blank" rel="noopener noreferrer">+91 92103 26018</a>
             </div>
             <div class="footer-contact-item">
               <span class="fci-icon">📧</span>
@@ -4643,14 +4652,50 @@
     // Pending nav target for after login
     let _pendingAdminNav = null;
 
-    // ─── MOBILE BACK-BUTTON FIX ────────────────────────────────────────────────
-    // Track the currently active page so popstate can navigate back to it.
+    // ─── MOBILE BACK-BUTTON & MODAL HISTORY FIX ────────────────────────────────
     let _currentPage = 'shop';
+    let _modalHistoryCount = 0;
 
-    // Listen for the browser/hardware back button.
+    function pushModalHistory(modalName) {
+      _modalHistoryCount++;
+      history.pushState({ modal: modalName || 'generic', count: _modalHistoryCount }, '');
+    }
+
+    function popModalHistoryIfNeeded() {
+      if (_modalHistoryCount > 0) {
+        _modalHistoryCount--;
+        if (history.state && history.state.modal) {
+          history.back();
+        }
+      }
+    }
+
+    function getAnyOpenModal() {
+      if (document.getElementById('photoLightbox')?.classList.contains('open')) return (isBack) => closeLightbox(isBack);
+      if (document.getElementById('reviewModalOverlay')?.classList.contains('open')) return (isBack) => closeReviewModal(isBack);
+      if (document.getElementById('checkoutModal')?.classList.contains('open')) return (isBack) => closeModal(isBack);
+      if (document.getElementById('cartOverlay')?.classList.contains('open')) return (isBack) => toggleCart(isBack);
+      if (document.getElementById('leftShelf')?.classList.contains('open')) return (isBack) => closeShelf(isBack);
+      if (document.getElementById('pvOverlay')?.classList.contains('open')) return (isBack) => closeProductPopup(isBack);
+      if (document.getElementById('legalModal')?.classList.contains('open')) return (isBack) => closeLegalModal(isBack);
+      if (document.getElementById('outOfStockModal')?.classList.contains('open')) return (isBack) => closeOutOfStockModal(isBack);
+      if (document.getElementById('adminLoginModal')?.classList.contains('open')) return (isBack) => cancelAdminLogin(isBack);
+      if (document.getElementById('editOrderOverlay')?.classList.contains('open')) return (isBack) => closeEditOrder(isBack);
+      return null;
+    }
+
+    // Listen for the browser/hardware back button (popstate event).
     window.addEventListener('popstate', function (e) {
+      // 1. If any modal or slide-over panel is open, close it without closing the website!
+      const closeFn = getAnyOpenModal();
+      if (closeFn) {
+        if (_modalHistoryCount > 0) _modalHistoryCount--;
+        closeFn(true); // pass true indicating closed via back button
+        return;
+      }
+
+      // 2. Otherwise navigate to page in app state
       const page = (e.state && e.state.page) ? e.state.page : 'shop';
-      // Navigate within the app without pushing another history entry.
       _showPageInternal(page);
     });
 
@@ -4662,6 +4707,7 @@
           // Show login modal, remember where user wanted to go
           _pendingAdminNav = { name, el, bnavId };
           document.getElementById('adminLoginModal').classList.add('open');
+          pushModalHistory('adminLogin');
           setTimeout(() => document.getElementById('adminUsername').focus(), 100);
           return;
         }
@@ -4815,6 +4861,7 @@
       }
       document.getElementById('pvOverlay').classList.add('open');
       document.body.style.overflow = 'hidden';
+      pushModalHistory('quickview');
     }
 
     function selectPvColor(el, colorName) {
@@ -4833,9 +4880,13 @@
       closeProductPopup();
     }
 
-    function closeProductPopup() {
-      document.getElementById('pvOverlay').classList.remove('open');
-      document.body.style.overflow = '';
+    function closeProductPopup(isBackNav) {
+      const overlay = document.getElementById('pvOverlay');
+      if (overlay && overlay.classList.contains('open')) {
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+        if (!isBackNav) popModalHistoryIfNeeded();
+      }
     }
 
     function closePvOnBg(e) {
@@ -4924,11 +4975,13 @@
     function updateCartCount() { document.getElementById('cartCount').textContent = cart.reduce((s, i) => s + i.qty, 0); }
     
     let cartStockPoll = null;
-    function toggleCart() {
+    function toggleCart(isBackNav) {
       const overlay = document.getElementById('cartOverlay');
+      const isOpening = !overlay.classList.contains('open');
       overlay.classList.toggle('open');
       
-      if (overlay.classList.contains('open')) {
+      if (isOpening) {
+        pushModalHistory('cart');
         api.get('/api/products').then(fresh => {
           if (!Array.isArray(fresh)) return;
           fresh.forEach(fp => {
@@ -4951,9 +5004,12 @@
              }
            }, 120000);
         }
-      } else if (cartStockPoll) {
-        clearInterval(cartStockPoll);
-        cartStockPoll = null;
+      } else {
+        if (!isBackNav) popModalHistoryIfNeeded();
+        if (cartStockPoll) {
+          clearInterval(cartStockPoll);
+          cartStockPoll = null;
+        }
       }
       renderCartPanel();
     }
@@ -5096,6 +5152,7 @@
       <button class="btn-secondary" onclick="closeModal()">Back</button>
     </div>`;
       document.getElementById('checkoutModal').classList.add('open');
+      pushModalHistory('checkout');
     }
 
     async function placeOrder() {
@@ -5304,31 +5361,35 @@ Total: ₹${order.total}`;
 
       }
     }
-    function closeModal() {
-      document.getElementById('checkoutModal').classList.remove('open');
-      // If a post-order review was just submitted, scroll to and highlight it
-      if (window._postOrderReviewJustSubmitted) {
-        window._postOrderReviewJustSubmitted = false;
-        renderReviews();
-        setTimeout(() => {
-          const section = document.getElementById('customerReviews');
-          if (section) {
-            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            // Pulse-highlight the first (newest) review card
-            setTimeout(() => {
-              const firstCard = document.querySelector('#reviewsGrid .review-card');
-              if (firstCard) {
-                firstCard.style.transition = 'box-shadow .4s, transform .4s';
-                firstCard.style.boxShadow = '0 0 0 4px #E8601C, 0 12px 36px rgba(232,96,28,0.3)';
-                firstCard.style.transform = 'translateY(-4px)';
-                setTimeout(() => {
-                  firstCard.style.boxShadow = '';
-                  firstCard.style.transform = '';
-                }, 1800);
-              }
-            }, 600);
-          }
-        }, 300);
+    function closeModal(isBackNav) {
+      const modal = document.getElementById('checkoutModal');
+      if (modal && modal.classList.contains('open')) {
+        modal.classList.remove('open');
+        if (!isBackNav) popModalHistoryIfNeeded();
+        // If a post-order review was just submitted, scroll to and highlight it
+        if (window._postOrderReviewJustSubmitted) {
+          window._postOrderReviewJustSubmitted = false;
+          renderReviews();
+          setTimeout(() => {
+            const section = document.getElementById('customerReviews');
+            if (section) {
+              section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              // Pulse-highlight the first (newest) review card
+              setTimeout(() => {
+                const firstCard = document.querySelector('#reviewsGrid .review-card');
+                if (firstCard) {
+                  firstCard.style.transition = 'box-shadow .4s, transform .4s';
+                  firstCard.style.boxShadow = '0 0 0 4px #E8601C, 0 12px 36px rgba(232,96,28,0.3)';
+                  firstCard.style.transform = 'translateY(-4px)';
+                  setTimeout(() => {
+                    firstCard.style.boxShadow = '';
+                    firstCard.style.transform = '';
+                  }, 1800);
+                }
+              }, 600);
+            }
+          }, 300);
+        }
       }
     }
 
@@ -6553,15 +6614,19 @@ Total: ₹${order.total}`;
         descEl.textContent = 'One or more items in your cart are now out of stock. Please update your cart and try again.';
       }
       modal.classList.add('open');
+      pushModalHistory('oos');
       // Close on Escape
       modal._escFn = (e) => { if (e.key === 'Escape') closeOutOfStockModal(); };
       document.addEventListener('keydown', modal._escFn);
     }
 
-    function closeOutOfStockModal() {
+    function closeOutOfStockModal(isBackNav) {
       const modal = document.getElementById('outOfStockModal');
-      modal.classList.remove('open');
-      if (modal._escFn) { document.removeEventListener('keydown', modal._escFn); modal._escFn = null; }
+      if (modal && modal.classList.contains('open')) {
+        modal.classList.remove('open');
+        if (!isBackNav) popModalHistoryIfNeeded();
+        if (modal._escFn) { document.removeEventListener('keydown', modal._escFn); modal._escFn = null; }
+      }
     }
 
     function adminLogout() {
@@ -6699,11 +6764,16 @@ Total: ₹${order.total}`;
         document.getElementById('legalModalTitle').textContent = data.title;
         document.getElementById('legalModalBody').innerHTML = data.body;
         document.getElementById('legalModal').classList.add('open');
+        pushModalHistory('legal');
       }
     }
 
-    function closeLegalModal() {
-      document.getElementById('legalModal').classList.remove('open');
+    function closeLegalModal(isBackNav) {
+      const modal = document.getElementById('legalModal');
+      if (modal && modal.classList.contains('open')) {
+        modal.classList.remove('open');
+        if (!isBackNav) popModalHistoryIfNeeded();
+      }
     }
 
 
@@ -6712,12 +6782,20 @@ Total: ₹${order.total}`;
     let allReviews = [];
     let currentReviewRating = 0;
 
-    function loadReviews() {
+    async function loadReviews() {
       try {
-        allReviews = JSON.parse(localStorage.getItem(REVIEWS_LS_KEY)) || [];
-        if (!Array.isArray(allReviews)) allReviews = [];
-      } catch(e) { allReviews = []; }
+        const fetched = await api.get('/api/reviews');
+        if (Array.isArray(fetched)) {
+          allReviews = fetched;
+          saveReviews();
+        } else {
+          allReviews = JSON.parse(localStorage.getItem(REVIEWS_LS_KEY)) || [];
+        }
+      } catch (e) {
+        try { allReviews = JSON.parse(localStorage.getItem(REVIEWS_LS_KEY)) || []; } catch(err) { allReviews = []; }
+      }
       renderReviews();
+      renderShelfReviews();
     }
 
     function saveReviews() {
@@ -6774,10 +6852,15 @@ Total: ₹${order.total}`;
       document.getElementById('reviewText').value = '';
       updateStarPicker(0);
       document.getElementById('reviewModalOverlay').classList.add('open');
+      pushModalHistory('review');
     }
 
-    function closeReviewModal() {
-      document.getElementById('reviewModalOverlay').classList.remove('open');
+    function closeReviewModal(isBackNav) {
+      const overlay = document.getElementById('reviewModalOverlay');
+      if (overlay && overlay.classList.contains('open')) {
+        overlay.classList.remove('open');
+        if (!isBackNav) popModalHistoryIfNeeded();
+      }
     }
 
     function closeReviewModalOnBg(e) {
@@ -6795,7 +6878,7 @@ Total: ₹${order.total}`;
       });
     }
 
-    function submitReview() {
+    async function submitReview() {
       const name = document.getElementById('reviewName').value.trim();
       const text = document.getElementById('reviewText').value.trim();
       const location = document.getElementById('reviewLocation').value.trim();
@@ -6804,24 +6887,48 @@ Total: ₹${order.total}`;
       if (!currentReviewRating) { showToast('Please select a rating ⭐'); return; }
       if (!text) { showToast('Please write your review'); return; }
 
-      const review = { name, location, rating: currentReviewRating, text, photos: [], ts: Date.now() };
-      allReviews.push(review);
-      saveReviews();
-      closeReviewModal();
-      renderReviews();
-      showToast('❤️ Thank you for your review!');
-      setTimeout(() => {
-        document.getElementById('customerReviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 400);
+      const submitBtn = document.getElementById('submitReviewBtn');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Submitting…'; }
+
+      try {
+        const res = await api.post('/api/reviews', {
+          name,
+          location,
+          rating: currentReviewRating,
+          text
+        });
+        if (res && (res._id || res.id)) {
+          allReviews.unshift(res);
+        } else {
+          allReviews.unshift({ name, location, rating: currentReviewRating, text, ts: Date.now() });
+        }
+        saveReviews();
+        closeReviewModal();
+        renderReviews();
+        renderShelfReviews();
+        showToast('❤️ Thank you for your review!');
+        setTimeout(() => {
+          document.getElementById('customerReviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 400);
+      } catch(e) {
+        showToast('❌ Could not submit review. Try again.');
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '❤️ Submit Review'; }
+      }
     }
 
     function openLightbox(src) {
       document.getElementById('lightboxImg').src = src;
       document.getElementById('photoLightbox').classList.add('open');
+      pushModalHistory('lightbox');
     }
 
-    function closeLightbox() {
-      document.getElementById('photoLightbox').classList.remove('open');
+    function closeLightbox(isBackNav) {
+      const lightbox = document.getElementById('photoLightbox');
+      if (lightbox && lightbox.classList.contains('open')) {
+        lightbox.classList.remove('open');
+        if (!isBackNav) popModalHistoryIfNeeded();
+      }
     }
 
     let _postOrderRating = 0;
@@ -6843,32 +6950,39 @@ Total: ₹${order.total}`;
       }, 100);
     }
 
-    function postOrderSubmitReview(customerName) {
+    async function postOrderSubmitReview(customerName) {
       const text = (document.getElementById('postOrderReviewText')?.value || '').trim();
       if (!_postOrderRating) { showToast('Please select a star rating ⭐'); return; }
       if (!text) { showToast('Please write a short review'); return; }
 
-      const review = {
-        name: customerName || 'Happy Customer',
-        location: '',
-        rating: _postOrderRating,
-        text,
-        photos: [],
-        ts: Date.now()
-      };
-      allReviews.push(review);
-      saveReviews();
-      renderReviews();
-      window._postOrderReviewJustSubmitted = true;
+      try {
+        const res = await api.post('/api/reviews', {
+          name: customerName || 'Happy Customer',
+          location: '',
+          rating: _postOrderRating,
+          text
+        });
+        if (res && (res._id || res.id)) {
+          allReviews.unshift(res);
+        } else {
+          allReviews.unshift({ name: customerName || 'Happy Customer', location: '', rating: _postOrderRating, text, ts: Date.now() });
+        }
+        saveReviews();
+        renderReviews();
+        renderShelfReviews();
+        window._postOrderReviewJustSubmitted = true;
 
-      // Show thank-you state inside the box
-      const fields = document.getElementById('postOrderReviewFields');
-      const stars = document.getElementById('postOrderStars');
-      const thanks = document.getElementById('postOrderReviewThanks');
-      if (fields) fields.style.display = 'none';
-      if (stars) stars.style.display = 'none';
-      if (thanks) thanks.style.display = 'block';
-      _postOrderRating = 0;
+        // Show thank-you state inside the box
+        const fields = document.getElementById('postOrderReviewFields');
+        const stars = document.getElementById('postOrderStars');
+        const thanks = document.getElementById('postOrderReviewThanks');
+        if (fields) fields.style.display = 'none';
+        if (stars) stars.style.display = 'none';
+        if (thanks) thanks.style.display = 'block';
+        _postOrderRating = 0;
+      } catch(e) {
+        showToast('❌ Could not save review. Try again.');
+      }
     }
 
     // Load reviews on page start
@@ -6949,7 +7063,7 @@ Total: ₹${order.total}`;
             <p>Your beautiful Rakhi will be packed with love and delivered to your doorstep across India.</p>
           </div>
         </div>
-        <a href="https://wa.me/919560026018" class="shelf-wa-btn" target="_blank" rel="noopener noreferrer">
+        <a href="https://wa.me/919210326018" class="shelf-wa-btn" target="_blank" rel="noopener noreferrer">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           Chat on WhatsApp
         </a>
@@ -6975,8 +7089,7 @@ Total: ₹${order.total}`;
       <div class="shelf-panel" id="shelf-panel-contact">
         <div class="shelf-info-card">
           <h4>📞 Call / WhatsApp</h4>
-          <a href="tel:+919560026018">📱 +91 95600 26018</a>
-          <a href="tel:+919210326018">📱 +91 92103 26018</a>
+          <a href="https://wa.me/919210326018" target="_blank" rel="noopener noreferrer">📱 +91 92103 26018</a>
         </div>
         <div class="shelf-info-card">
           <h4>📧 Email Us</h4>
@@ -6986,7 +7099,7 @@ Total: ₹${order.total}`;
           <h4>📸 Follow on Instagram</h4>
           <a href="https://www.instagram.com/_shreeshyamcrafts_" target="_blank" rel="noopener noreferrer">📷 @_shreeshyamcrafts_</a>
         </div>
-        <a href="https://wa.me/919560026018" class="shelf-wa-btn" target="_blank" rel="noopener noreferrer">
+        <a href="https://wa.me/919210326018" class="shelf-wa-btn" target="_blank" rel="noopener noreferrer">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           Message Us on WhatsApp
         </a>
@@ -7015,13 +7128,18 @@ Total: ₹${order.total}`;
       document.getElementById('leftShelf').classList.add('open');
       document.getElementById('shelfOverlay').classList.add('open');
       document.body.style.overflow = 'hidden';
+      pushModalHistory('shelf');
       renderShelfReviews();
     }
 
-    function closeShelf() {
-      document.getElementById('leftShelf').classList.remove('open');
-      document.getElementById('shelfOverlay').classList.remove('open');
-      document.body.style.overflow = '';
+    function closeShelf(isBackNav) {
+      const shelf = document.getElementById('leftShelf');
+      if (shelf && shelf.classList.contains('open')) {
+        shelf.classList.remove('open');
+        document.getElementById('shelfOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+        if (!isBackNav) popModalHistoryIfNeeded();
+      }
     }
 
     function switchShelfTab(name, el) {
@@ -7036,18 +7154,19 @@ Total: ₹${order.total}`;
     function renderShelfReviews() {
       const el = document.getElementById('shelfReviewsContent');
       if (!el) return;
-      // Read reviews from localStorage directly so shelf always shows latest
-      let reviews = [];
-      try { reviews = JSON.parse(localStorage.getItem('rr_customer_reviews') || '[]'); } catch(e){}
+      let reviews = allReviews.length > 0 ? allReviews : [];
+      if (reviews.length === 0) {
+        try { reviews = JSON.parse(localStorage.getItem('rr_customer_reviews') || '[]'); } catch(e){}
+      }
       if (!Array.isArray(reviews) || reviews.length === 0) {
         el.innerHTML = `<div class="shelf-no-reviews"><div>🌸</div><p style="font-weight:700;color:var(--bark)">No reviews yet!</p><p style="font-size:.82rem;margin-top:6px">Be the first to share your experience after ordering.</p></div>`;
         return;
       }
-      const sorted = [...reviews].sort((a, b) => b.ts - a.ts);
+      const sorted = [...reviews].sort((a, b) => (b.ts || new Date(b.createdAt).getTime()) - (a.ts || new Date(a.createdAt).getTime()));
       el.innerHTML = sorted.map(r => {
         const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
         const initial = (r.name || 'A').charAt(0).toUpperCase();
-        const dateStr = new Date(r.ts).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        const dateStr = new Date(r.ts || r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
         const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         return `
           <div class="shelf-review-card">
@@ -7069,6 +7188,12 @@ Total: ₹${order.total}`;
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeShelf(); });
   </script>
 
+  <!-- WhatsApp Floating Circular Button -->
+  <a href="https://wa.me/919210326018" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" title="Chat on WhatsApp">
+    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  </a>
 </body>
 
 </html>

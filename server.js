@@ -8,6 +8,7 @@ const compression = require('compression');
 const Product = require('./models/Product');
 const Order = require('./models/Order');
 const Category = require('./models/Category');
+const Review = require('./models/Review');
 
 
 const app = express();
@@ -362,8 +363,39 @@ app.post('/api/orders/track', async (req, res) => {
   }
 });
 
-// Stats, new-orders-count, mongo-test, offline-sales, and cash-ledger
-// are all handled by admin-server.js
+// ── REVIEWS API (public read & write with MongoDB persistence) ───────────────
+app.get('/api/reviews', async (req, res) => {
+  try {
+    const reviews = await Review.find().sort({ createdAt: -1 }).lean();
+    res.json(reviews);
+  } catch (err) {
+    console.error('Failed to load reviews:', err);
+    res.status(500).json({ error: 'Failed to load reviews' });
+  }
+});
+
+app.post('/api/reviews', async (req, res) => {
+  try {
+    const { name, location, rating, text } = req.body;
+    if (!name || !rating || !text) {
+      return res.status(400).json({ error: 'Name, rating and review text are required.' });
+    }
+
+    const review = await Review.create({
+      name: String(name).trim(),
+      location: String(location || '').trim(),
+      rating: Number(rating),
+      text: String(text).trim(),
+      createdAt: new Date(),
+      ts: Date.now()
+    });
+
+    res.json(review);
+  } catch (err) {
+    console.error('Failed to save review:', err);
+    res.status(500).json({ error: 'Failed to save review' });
+  }
+});
 
 
 
