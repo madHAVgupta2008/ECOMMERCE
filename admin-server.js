@@ -661,6 +661,96 @@ app.post('/api/offline-sales', requireAdmin, async (req, res) => {
   }
 });
 
+app.put('/api/offline-sales/:id', requireAdmin, async (req, res) => {
+  try {
+    const { items, discount, note, date } = req.body;
+    if (!Array.isArray(items) || items.length === 0 || !date)
+      return res.status(400).json({ error: 'Missing required fields (items, date)' });
+
+    const sale = await OfflineSale.findById(req.params.id);
+    if (!sale) return res.status(404).json({ error: 'Sale not found' });
+
+    // Step 1: Restore previous stock temporarily for listed items in original sale
+    const oldItems = Array.isArray(sale.items) && sale.items.length > 0
+      ? sale.items
+      : (sale.itemName ? [{ itemCode: sale.itemCode, itemName: sale.itemName, qty: sale.qty || 1, unitPrice: sale.unitPrice || 0 }] : []);
+
+    const restoredProductsMap = new Map();
+    for (const item of oldItems) {
+      if (item.itemCode) {
+        const product = await Product.findOne({ itemCode: item.itemCode });
+        if (product) {
+          product.stock += item.qty;
+          await product.save();
+          restoredProductsMap.set(item.itemCode, (restoredProductsMap.get(item.itemCode) || 0) + item.qty);
+        }
+      }
+    }
+
+    // Step 2: Validate and process new items list
+    const processedItems = [];
+    let validationError = null;
+
+    for (const item of items) {
+      const qty       = Number(item.qty);
+      const unitPrice = Number(item.unitPrice);
+      if (!item.itemName || isNaN(qty) || qty < 1 || isNaN(unitPrice) || unitPrice < 0) {
+        validationError = 'Each item must have a name, valid qty and unit price';
+        break;
+      }
+
+      const lineTotal          = Math.round(qty * unitPrice * 100) / 100;
+      let resolvedItemCode = (item.itemCode || '').trim().toUpperCase();
+      let resolvedItemName = item.itemName.trim();
+
+      if (resolvedItemCode) {
+        const product = await Product.findOne({ itemCode: resolvedItemCode });
+        if (!product) {
+          validationError = `No product found with item code: ${resolvedItemCode}`;
+          break;
+        }
+        if (product.stock < qty) {
+          validationError = `Insufficient stock for "${product.name}". Available: ${product.stock}`;
+          break;
+        }
+        product.stock = Math.max(0, product.stock - qty);
+        await product.save();
+        resolvedItemName = product.name;
+      }
+      processedItems.push({ itemCode: resolvedItemCode, itemName: resolvedItemName, qty, unitPrice, lineTotal });
+    }
+
+    // If validation failed, revert stock restoration
+    if (validationError) {
+      for (const [itemCode, restoredQty] of restoredProductsMap.entries()) {
+        const product = await Product.findOne({ itemCode });
+        if (product) {
+          product.stock = Math.max(0, product.stock - restoredQty);
+          await product.save();
+        }
+      }
+      return res.status(400).json({ error: validationError });
+    }
+
+    const subTotal    = Math.round(processedItems.reduce((s, i) => s + i.lineTotal, 0) * 100) / 100;
+    const discountAmt = Math.max(0, Number(discount) || 0);
+    const finalAmount = Math.max(0, Math.round((subTotal - discountAmt) * 100) / 100);
+
+    sale.items       = processedItems;
+    sale.subTotal    = subTotal;
+    sale.discount    = discountAmt;
+    sale.finalAmount = finalAmount;
+    sale.note        = (note || '').trim();
+    sale.date        = date;
+
+    await sale.save();
+    res.json(sale);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update sale' });
+  }
+});
+
 app.delete('/api/offline-sales/:id', requireAdmin, async (req, res) => {
   try {
     const sale = await OfflineSale.findById(req.params.id);

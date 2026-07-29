@@ -598,7 +598,7 @@
         </div>
         <p style="color:#7a5c3a;font-size:.92rem;margin-bottom:20px;max-width:580px">Record items sold in person. Stock is deducted automatically for listed products.</p>
         <div class="ol-form" style="max-width:780px">
-          <h4>➕ Record a New Offline Sale</h4>
+          <h4 id="olFormTitle">➕ Record a New Offline Sale</h4>
           <div style="margin-bottom:16px">
             <label style="display:block;font-weight:700;font-size:.85rem;margin-bottom:5px;color:var(--bark)">Sale Date *</label>
             <input type="date" id="olDate" style="padding:11px 14px;border:2px solid #d4b483;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:var(--cream);color:var(--text-dark);width:220px">
@@ -652,7 +652,7 @@
             <label style="display:block;font-weight:700;font-size:.85rem;margin-bottom:5px;color:var(--bark)">Note <small style="font-weight:400;color:#999">(optional)</small></label>
             <input type="text" id="olNote" placeholder="e.g. Cash payment, festival sale" style="width:100%;max-width:480px;padding:11px 14px;border:2px solid #d4b483;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:var(--cream);color:var(--text-dark)">
           </div>
-          <div style="margin-top:18px"><button class="btn-primary" id="olSaveBtn" onclick="saveOfflineSale()">💾 Save Sale</button></div>
+          <div style="margin-top:18px;display:flex;gap:10px;align-items:center"><button class="btn-primary" id="olSaveBtn" onclick="saveOfflineSale()">💾 Save Sale</button><button type="button" id="olCancelEditBtn" onclick="olCancelEdit()" style="display:none;padding:10px 18px;background:#6c757d;color:#fff;border:none;border-radius:9px;cursor:pointer;font-weight:700;font-family:'Nunito',sans-serif">✕ Cancel Edit</button></div>
         </div>
         <div style="overflow-x:auto" id="offlineSalesTableWrap"><div class="loading-spinner">⏳ Loading sales…</div></div>
       </div>
@@ -754,6 +754,8 @@
     let olCart = [];
     let _olSelectedProduct = null;
     let _ordersCache = {};  // id → order object, used by Edit button
+    let editingOfflineSaleId = null;
+    let _offlineSalesCache = {};
 
     // ─── API (cookies sent automatically by browser) ────────────────────────────
     const api = {
@@ -1586,8 +1588,12 @@
       try {
         const sales = await api.get('/api/offline-sales');
         if (!Array.isArray(sales) || !sales.length) { wrap.innerHTML = `<div class="empty-state"><div class="big-icon">🏪</div><h3>No offline sales yet</h3><p>Record your first sale above.</p></div>`; return; }
+        _offlineSalesCache = {};
         let grandTotal=0, grandDiscount=0, grandFinal=0;
-        sales.forEach(s => { grandTotal += s.subTotal||s.amount||0; grandDiscount += s.discount||0; grandFinal += s.finalAmount||s.amount||0; });
+        sales.forEach(s => {
+          _offlineSalesCache[s._id] = s;
+          grandTotal += s.subTotal||s.amount||0; grandDiscount += s.discount||0; grandFinal += s.finalAmount||s.amount||0;
+        });
         wrap.innerHTML = `<table class="sales-table">
           <thead><tr><th>Date</th><th>Items Sold</th><th style="text-align:right">Subtotal (₹)</th><th style="text-align:right">Discount (₹)</th><th style="text-align:right">Final (₹)</th><th>Note</th><th>Action</th></tr></thead>
           <tbody>${sales.map(s => {
@@ -1595,11 +1601,81 @@
               ? s.items.map(it => `<div style="font-size:.82rem;line-height:1.6">${it.itemCode?`<span style="font-family:monospace;background:#f2e6d9;padding:0 4px;border-radius:3px;font-size:.78rem">${escHtml(it.itemCode)}</span> `:''}${escHtml(it.itemName)} ×${it.qty} <span style="color:#7a5c3a">@ ₹${it.unitPrice}</span></div>`).join('')
               : `<div style="font-size:.82rem">${escHtml(s.itemName||'')} ×${s.qty||1}</div>`;
             const subTotal = s.subTotal||s.amount||0, discount = s.discount||0, finalAmt = s.finalAmount||s.amount||0;
-            return `<tr><td style="white-space:nowrap">${s.date}</td><td>${itemsHtml}</td><td style="text-align:right">₹${subTotal.toLocaleString('en-IN')}</td><td style="text-align:right;color:#c0392b">${discount>0?'-₹'+discount.toLocaleString('en-IN'):'—'}</td><td style="text-align:right"><strong>₹${finalAmt.toLocaleString('en-IN')}</strong></td><td style="font-size:.82rem;color:#7a5c3a">${escHtml(s.note||'—')}</td><td><button class="btn-delete" onclick="deleteOfflineSale('${s._id}')">&#128465;</button></td></tr>`;
+            return `<tr><td style="white-space:nowrap">${s.date}</td><td>${itemsHtml}</td><td style="text-align:right">₹${subTotal.toLocaleString('en-IN')}</td><td style="text-align:right;color:#c0392b">${discount>0?'-₹'+discount.toLocaleString('en-IN'):'—'}</td><td style="text-align:right"><strong>₹${finalAmt.toLocaleString('en-IN')}</strong></td><td style="font-size:.82rem;color:#7a5c3a">${escHtml(s.note||'—')}</td><td style="display:flex;gap:6px;align-items:center"><button class="btn-edit" onclick="editOfflineSale('${s._id}')" title="Edit sale">✏️ Edit</button><button class="btn-delete" onclick="deleteOfflineSale('${s._id}')" title="Delete sale">&#128465;</button></td></tr>`;
           }).join('')}
           <tr class="sales-total-row"><td colspan="2"><strong>Grand Total</strong></td><td style="text-align:right"><strong>₹${grandTotal.toLocaleString('en-IN')}</strong></td><td style="text-align:right;color:#c0392b"><strong>-₹${grandDiscount.toLocaleString('en-IN')}</strong></td><td style="text-align:right;color:var(--deep-red)"><strong>₹${grandFinal.toLocaleString('en-IN')}</strong></td><td colspan="2"></td></tr>
           </tbody></table>`;
       } catch(e) { wrap.innerHTML = '<p style="padding:20px;color:#a08060">Could not load sales</p>'; }
+    }
+
+    function editOfflineSale(id) {
+      const s = _offlineSalesCache[id];
+      if (!s) return;
+      editingOfflineSaleId = id;
+
+      const dateEl = document.getElementById('olDate');
+      if (dateEl) dateEl.value = s.date || '';
+
+      const noteEl = document.getElementById('olNote');
+      if (noteEl) noteEl.value = s.note || '';
+
+      const discEl = document.getElementById('olDiscount');
+      if (discEl) discEl.value = s.discount || 0;
+
+      const items = Array.isArray(s.items) && s.items.length > 0
+        ? s.items
+        : (s.itemName ? [{ itemCode: s.itemCode || '', itemName: s.itemName, qty: s.qty || 1, unitPrice: s.unitPrice || 0, lineTotal: s.amount || 0 }] : []);
+
+      olCart = items.map(it => ({
+        itemCode: it.itemCode || '',
+        itemName: it.itemName,
+        qty: it.qty,
+        unitPrice: it.unitPrice,
+        lineTotal: it.lineTotal || Math.round(it.qty * it.unitPrice * 100) / 100,
+        isCustom: !it.itemCode
+      }));
+
+      olRenderCart();
+
+      const titleEl = document.getElementById('olFormTitle');
+      if (titleEl) titleEl.innerHTML = '✏️ Edit Offline Sale';
+
+      const btn = document.getElementById('olSaveBtn');
+      if (btn) btn.innerHTML = '💾 Update Sale';
+
+      const cancelBtn = document.getElementById('olCancelEditBtn');
+      if (cancelBtn) cancelBtn.style.display = 'inline-block';
+
+      const formSec = document.getElementById('section-offline-sales');
+      if (formSec) formSec.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function olCancelEdit() {
+      editingOfflineSaleId = null;
+      olCart = [];
+      _olSelectedProduct = null;
+
+      const dateEl = document.getElementById('olDate');
+      if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+
+      ['olItemCodeInput','olCustomName','olNote'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+      ['olQty','olCustomQty'].forEach(id => { const el = document.getElementById(id); if(el) el.value='1'; });
+      ['olUnitPrice','olCustomPrice'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+      const discEl = document.getElementById('olDiscount');
+      if (discEl) discEl.value = '0';
+      const nameDisp = document.getElementById('olItemNameDisplay');
+      if (nameDisp) nameDisp.innerHTML = '';
+
+      const titleEl = document.getElementById('olFormTitle');
+      if (titleEl) titleEl.innerHTML = '➕ Record a New Offline Sale';
+
+      const btn = document.getElementById('olSaveBtn');
+      if (btn) btn.innerHTML = '💾 Save Sale';
+
+      const cancelBtn = document.getElementById('olCancelEditBtn');
+      if (cancelBtn) cancelBtn.style.display = 'none';
+
+      olRenderCart();
     }
 
     async function saveOfflineSale() {
@@ -1609,25 +1685,26 @@
       if (!date) { showToast('⚠️ Please select a sale date'); return; }
       if (!olCart.length) { showToast('⚠️ Add at least one product'); return; }
       const btn = document.getElementById('olSaveBtn');
-      btn.disabled = true; btn.textContent = '⏳ Saving…';
+      btn.disabled = true; btn.textContent = editingOfflineSaleId ? '⏳ Updating…' : '⏳ Saving…';
       try {
-        const res = await api.post('/api/offline-sales', { items: olCart.map(({itemCode,itemName,qty,unitPrice,lineTotal}) => ({itemCode,itemName,qty,unitPrice,lineTotal})), discount, note, date });
-        if (res.error) { showToast('❌ ' + res.error); btn.disabled = false; btn.textContent = '💾 Save Sale'; return; }
-        showToast('✅ Sale recorded!');
-        olCart = []; _olSelectedProduct = null;
-        ['olItemCodeInput','olCustomName','olNote'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-        ['olQty','olCustomQty'].forEach(id => { const el = document.getElementById(id); if(el) el.value='1'; });
-        ['olUnitPrice','olCustomPrice'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-        document.getElementById('olDiscount').value = '0';
-        document.getElementById('olItemNameDisplay').innerHTML = '';
-        olRenderCart(); await loadOfflineSales(); loadStats();
-      } catch(e) { showToast('❌ Failed to save sale'); }
-      btn.disabled = false; btn.textContent = '💾 Save Sale';
+        const payload = { items: olCart.map(({itemCode,itemName,qty,unitPrice,lineTotal}) => ({itemCode,itemName,qty,unitPrice,lineTotal})), discount, note, date };
+        const res = editingOfflineSaleId ? await api.put(`/api/offline-sales/${editingOfflineSaleId}`, payload) : await api.post('/api/offline-sales', payload);
+        if (res.error) { showToast('❌ ' + res.error); btn.disabled = false; btn.textContent = editingOfflineSaleId ? '💾 Update Sale' : '💾 Save Sale'; return; }
+        showToast(editingOfflineSaleId ? '✅ Sale updated!' : '✅ Sale recorded!');
+        olCancelEdit();
+        await loadOfflineSales(); loadStats();
+      } catch(e) { showToast(editingOfflineSaleId ? '❌ Failed to update sale' : '❌ Failed to save sale'); }
+      btn.disabled = false; btn.textContent = editingOfflineSaleId ? '💾 Update Sale' : '💾 Save Sale';
     }
 
     async function deleteOfflineSale(id) {
       if (!confirm('Delete this sale entry? Stock will be restored for listed products.')) return;
-      try { await api.del(`/api/offline-sales/${id}`); showToast('🗑️ Sale deleted'); loadOfflineSales(); loadStats(); } catch(e) { showToast('❌ Failed to delete'); }
+      try {
+        await api.del(`/api/offline-sales/${id}`);
+        showToast('🗑️ Sale deleted');
+        if (editingOfflineSaleId === id) olCancelEdit();
+        loadOfflineSales(); loadStats();
+      } catch(e) { showToast('❌ Failed to delete'); }
     }
 
     // ─── CASH LEDGER ─────────────────────────────────────────────────────────────

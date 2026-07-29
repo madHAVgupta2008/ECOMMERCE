@@ -1854,6 +1854,13 @@
       font-weight: 700;
     }
 
+    .btn-edit {
+      background: #e8f0fd; color: #2471a3; border: 1.5px solid #aed6f1;
+      border-radius: 7px; padding: 6px 12px; font-size: .8rem; font-weight: 700;
+      cursor: pointer; font-family: 'Nunito', sans-serif; transition: background .15s;
+    }
+    .btn-edit:hover { background: #d0e8fb; }
+
     .btn-delete {
       background: #fde8e8;
       color: var(--deep-red);
@@ -4200,7 +4207,7 @@
             (offline). Add multiple products, apply a discount, and the final amount is automatically added to Total Revenue.</p>
 
           <div class="ol-form" style="max-width:780px">
-            <h4>➕ Record a New Offline Sale</h4>
+            <h4 id="olFormTitle">➕ Record a New Offline Sale</h4>
 
             <!-- Date row -->
             <div style="margin-bottom:16px">
@@ -4296,8 +4303,9 @@
                 style="width:100%;max-width:480px;padding:11px 14px;border:2px solid #d4b483;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:var(--cream);color:var(--text-dark)">
             </div>
 
-            <div style="margin-top:18px">
+            <div style="margin-top:18px;display:flex;gap:10px;align-items:center">
               <button class="btn-primary" id="olSaveBtn" onclick="saveOfflineSale()">💾 Save Sale</button>
+              <button type="button" id="olCancelEditBtn" onclick="olCancelEdit()" style="display:none;padding:10px 18px;background:#6c757d;color:#fff;border:none;border-radius:9px;cursor:pointer;font-weight:700;font-family:'Nunito',sans-serif">✕ Cancel Edit</button>
             </div>
           </div>
 
@@ -6101,6 +6109,8 @@ Total: ₹${order.total}`;
     // Cart holds items to be saved in one sale
     let olCart = []; // [{ itemCode, itemName, qty, unitPrice, lineTotal, isCustom }]
     let _olSelectedProduct = null; // currently selected product from suggestions
+    let editingOfflineSaleId = null;
+    let _offlineSalesCache = {};
 
     function olFilterCodes() {
       const inp = document.getElementById('olItemCodeInput');
@@ -6292,8 +6302,10 @@ Total: ₹${order.total}`;
           wrap.innerHTML = `<div class="empty-state"><div class="big-icon">🏪</div><h3>No offline sales yet</h3><p>Record your first sale above.</p></div>`;
           return;
         }
+        _offlineSalesCache = {};
         let grandTotal = 0, grandDiscount = 0, grandFinal = 0;
         sales.forEach(s => {
+          _offlineSalesCache[s._id] = s;
           grandTotal += (s.subTotal || s.amount || 0);
           grandDiscount += (s.discount || 0);
           grandFinal += (s.finalAmount || s.amount || 0);
@@ -6310,7 +6322,6 @@ Total: ₹${order.total}`;
           </tr></thead>
           <tbody>
             ${sales.map(s => {
-              // Support both new multi-item format and legacy single-item format
               const itemsHtml = Array.isArray(s.items) && s.items.length
                 ? s.items.map(it => `<div style="font-size:.82rem;line-height:1.6">
                     ${it.itemCode ? `<span style="font-family:monospace;background:#f2e6d9;padding:0 4px;border-radius:3px;font-size:.78rem">${escHtml(it.itemCode)}</span> ` : ''}${escHtml(it.itemName)} ×${it.qty}
@@ -6329,7 +6340,10 @@ Total: ₹${order.total}`;
                 <td style="text-align:right;color:#c0392b">${discount > 0 ? '-₹' + discount.toLocaleString('en-IN') : '—'}</td>
                 <td style="text-align:right"><strong>₹${finalAmt.toLocaleString('en-IN')}</strong></td>
                 <td style="font-size:.82rem;color:#7a5c3a">${escHtml(s.note || '—')}</td>
-                <td><button class="btn-delete" onclick="deleteOfflineSale('${s._id}')">&#128465;</button></td>
+                <td style="display:flex;gap:6px;align-items:center">
+                  <button class="btn-edit" onclick="editOfflineSale('${s._id}')" title="Edit sale">✏️ Edit</button>
+                  <button class="btn-delete" onclick="deleteOfflineSale('${s._id}')" title="Delete sale">&#128465;</button>
+                </td>
               </tr>`;
             }).join('')}
             <tr class="sales-total-row">
@@ -6344,6 +6358,76 @@ Total: ₹${order.total}`;
       } catch (e) { wrap.innerHTML = '<p style="padding:20px;color:#a08060">Could not load sales</p>'; }
     }
 
+    function editOfflineSale(id) {
+      const s = _offlineSalesCache[id];
+      if (!s) return;
+      editingOfflineSaleId = id;
+
+      const dateEl = document.getElementById('olDate');
+      if (dateEl) dateEl.value = s.date || '';
+
+      const noteEl = document.getElementById('olNote');
+      if (noteEl) noteEl.value = s.note || '';
+
+      const discEl = document.getElementById('olDiscount');
+      if (discEl) discEl.value = s.discount || 0;
+
+      const items = Array.isArray(s.items) && s.items.length > 0
+        ? s.items
+        : (s.itemName ? [{ itemCode: s.itemCode || '', itemName: s.itemName, qty: s.qty || 1, unitPrice: s.unitPrice || 0, lineTotal: s.amount || 0 }] : []);
+
+      olCart = items.map(it => ({
+        itemCode: it.itemCode || '',
+        itemName: it.itemName,
+        qty: it.qty,
+        unitPrice: it.unitPrice,
+        lineTotal: it.lineTotal || Math.round(it.qty * it.unitPrice * 100) / 100,
+        isCustom: !it.itemCode
+      }));
+
+      olRenderCart();
+
+      const titleEl = document.getElementById('olFormTitle');
+      if (titleEl) titleEl.innerHTML = '✏️ Edit Offline Sale';
+
+      const btn = document.getElementById('olSaveBtn');
+      if (btn) btn.innerHTML = '💾 Update Sale';
+
+      const cancelBtn = document.getElementById('olCancelEditBtn');
+      if (cancelBtn) cancelBtn.style.display = 'inline-block';
+
+      const formSec = document.getElementById('section-offline-sales');
+      if (formSec) formSec.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function olCancelEdit() {
+      editingOfflineSaleId = null;
+      olCart = [];
+      _olSelectedProduct = null;
+
+      const dateEl = document.getElementById('olDate');
+      if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+
+      ['olItemCodeInput','olCustomName','olNote'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+      ['olQty','olCustomQty'].forEach(id => { const el = document.getElementById(id); if(el) el.value='1'; });
+      ['olUnitPrice','olCustomPrice'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+      const discEl = document.getElementById('olDiscount');
+      if (discEl) discEl.value = '0';
+      const nameDisp = document.getElementById('olItemNameDisplay');
+      if (nameDisp) nameDisp.innerHTML = '';
+
+      const titleEl = document.getElementById('olFormTitle');
+      if (titleEl) titleEl.innerHTML = '➕ Record a New Offline Sale';
+
+      const btn = document.getElementById('olSaveBtn');
+      if (btn) btn.innerHTML = '💾 Save Sale';
+
+      const cancelBtn = document.getElementById('olCancelEditBtn');
+      if (cancelBtn) cancelBtn.style.display = 'none';
+
+      olRenderCart();
+    }
+
     async function saveOfflineSale() {
       const date = document.getElementById('olDate').value;
       const note = (document.getElementById('olNote')?.value || '').trim();
@@ -6353,7 +6437,7 @@ Total: ₹${order.total}`;
       if (!olCart.length) { showToast('⚠️ Add at least one product to the sale'); return; }
 
       const btn = document.getElementById('olSaveBtn');
-      btn.disabled = true; btn.textContent = '⏳ Saving…';
+      btn.disabled = true; btn.textContent = editingOfflineSaleId ? '⏳ Updating…' : '⏳ Saving…';
       try {
         const payload = {
           items: olCart.map(({ itemCode, itemName, qty, unitPrice, lineTotal }) => ({ itemCode, itemName, qty, unitPrice, lineTotal })),
@@ -6361,26 +6445,14 @@ Total: ₹${order.total}`;
           note,
           date
         };
-        const res = await api.adminPost('/api/offline-sales', payload);
-        if (res.error) { showToast('❌ ' + res.error); btn.disabled = false; btn.textContent = '💾 Save Sale'; return; }
-        showToast('✅ Sale recorded!');
-        // Reset the form
-        olCart = [];
-        _olSelectedProduct = null;
-        document.getElementById('olItemCodeInput').value = '';
-        document.getElementById('olItemNameDisplay').innerHTML = '';
-        document.getElementById('olQty').value = '1';
-        document.getElementById('olUnitPrice').value = '';
-        document.getElementById('olCustomName').value = '';
-        document.getElementById('olCustomQty').value = '1';
-        document.getElementById('olCustomPrice').value = '';
-        document.getElementById('olDiscount').value = '0';
-        document.getElementById('olNote').value = '';
-        olRenderCart();
+        const res = editingOfflineSaleId ? await api.adminPut(`/api/offline-sales/${editingOfflineSaleId}`, payload) : await api.adminPost('/api/offline-sales', payload);
+        if (res.error) { showToast('❌ ' + res.error); btn.disabled = false; btn.textContent = editingOfflineSaleId ? '💾 Update Sale' : '💾 Save Sale'; return; }
+        showToast(editingOfflineSaleId ? '✅ Sale updated!' : '✅ Sale recorded!');
+        olCancelEdit();
         await loadOfflineSales();
         loadStats();
-      } catch (e) { showToast('❌ Failed to save sale'); }
-      btn.disabled = false; btn.textContent = '💾 Save Sale';
+      } catch (e) { showToast(editingOfflineSaleId ? '❌ Failed to update sale' : '❌ Failed to save sale'); }
+      btn.disabled = false; btn.textContent = editingOfflineSaleId ? '💾 Update Sale' : '💾 Save Sale';
     }
 
     async function deleteOfflineSale(id) {
@@ -6388,6 +6460,7 @@ Total: ₹${order.total}`;
       try {
         await api.adminDel(`/api/offline-sales/${id}`);
         showToast('🗑️ Sale deleted');
+        if (editingOfflineSaleId === id) olCancelEdit();
         loadOfflineSales();
         loadStats();
       } catch (e) { showToast('❌ Failed to delete'); }
